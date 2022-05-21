@@ -2,6 +2,7 @@ package RestServer.beans;
 
 import java.util.ArrayList;
 
+//Class for coordinates and taxi
 public class CoordMTaxiList {
     private ArrayList<MTaxi> mTaxisList;
     private int[] coordinates;
