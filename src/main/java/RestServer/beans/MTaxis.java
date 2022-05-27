@@ -2,6 +2,7 @@ package RestServer.beans;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.Random;
@@ -12,7 +13,7 @@ import static java.lang.Math.abs;
 @XmlAccessorType (XmlAccessType.FIELD)
 public class MTaxis {
 
-    @XmlRootElement(name = "mTaxis")
+    @XmlElement(name = "mTaxis")
     private ArrayList<MTaxi> mTaxisList;
 
     private static MTaxis instance;
@@ -40,7 +41,6 @@ public class MTaxis {
     }
 
     public synchronized CoordMTaxiList add(MTaxi u){
-
         for ( MTaxi t : this.getmTaxisList() ) {
             if (u.getId() == t.getId())
                 return null;

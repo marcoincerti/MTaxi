@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class MTaxisService {
     @GET
     @Produces({"application/json", "application/xml"})
-    public Response getDrones(){
+    public Response getMTaxis(){
         return Response.ok(MTaxis.getInstance()).build();
 
     }
@@ -20,7 +20,7 @@ public class MTaxisService {
     @Path("add")
     @POST
     @Consumes({"application/json", "application/xml"})
-    public Response addDrone(MTaxi u){
+    public Response addMTaxi(MTaxi u){
         CoordMTaxiList result = MTaxis.getInstance().add(u);
         if(result != null)
             return Response.ok(result).build();
@@ -31,7 +31,7 @@ public class MTaxisService {
     @Path("get")
     @GET
     @Produces({"application/json", "application/xml"})
-    public Response getDronesList(){
+    public Response getMTaxisList(){
         ArrayList<MTaxi> l = MTaxis.getInstance().getmTaxisList();
         return Response.ok(l).build();
     }

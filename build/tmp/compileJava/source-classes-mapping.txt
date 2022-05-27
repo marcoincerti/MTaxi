@@ -1,6 +1,0 @@
-RestServer/beans/MTaxis.java
- RestServer.beans.MTaxis
-Main.java
- Main
-RestServer/beans/MTaxi.java
- RestServer.beans.MTaxi
