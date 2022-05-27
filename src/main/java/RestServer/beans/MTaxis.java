@@ -10,10 +10,9 @@ import static java.lang.Math.abs;
 
 @XmlRootElement
 @XmlAccessorType (XmlAccessType.FIELD)
-
 public class MTaxis {
 
-    //@XmlRootElement(name = "mTaxis")
+    @XmlRootElement(name = "mTaxis")
     private ArrayList<MTaxi> mTaxisList;
 
     private static MTaxis instance;
