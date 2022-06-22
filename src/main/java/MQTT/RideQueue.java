@@ -57,7 +57,7 @@ public class RideQueue extends Thread{
     /*
     Remove ride assignment thread from the thread list
      */
-    public void removeThread(OrderAssignment t){
+    public void removeThread(RideAssignment t){
         synchronized (threadLock) {
             threadList.remove(t);
             t.interrupt();

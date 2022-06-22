@@ -14,8 +14,8 @@ public class MQTTBroker extends Thread{
     private static String topic = "seta/smartcity/rides";
     //private OrderQueue queue;
 
-    public MQTTBroker(MTaxi mTaxi, OrderQueue queue) {
-        this.drone = drone;
+    public MQTTBroker(MTaxi mTaxi, RideQueue queue) {
+        this.mTaxi = mTaxi;
         this.clientId = MqttClient.generateClientId();
         this.queue = queue;
     }
