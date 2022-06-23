@@ -1,5 +1,6 @@
 package MQTT;
 
+import RestServer.beans.Statistic;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -109,43 +110,42 @@ public class RestMethods {
         return true;
     }
 
-//    private String getStatisticPayload(Statistic s) throws JSONException {
-//        JSONObject payload = new JSONObject();
-//        payload.put("avgKm", s.getAvgKm());
-//        payload.put("avgDelivery", s.getAvgDelivery());
-//        payload.put("avgBattery", s.getAvgBattery());
-//        payload.put("timestamp", s.getTimestamp());
-//        payload.put("avgPollution", s.getAvgPollution());
-//        return payload.toString();
-//    }
+    private String getStatisticPayload(Statistic s) throws JSONException {
+        JSONObject payload = new JSONObject();
+        payload.put("avgKm", s.getAvgKm());
+        payload.put("avgDelivery", s.getAvgDelivery());
+        payload.put("avgBattery", s.getAvgBattery());
+        payload.put("timestamp", s.getTimestamp());
+        payload.put("avgPollution", s.getAvgPollution());
+        return payload.toString();
+    }
 
-//    public void sendStatistic(Statistic s){
-//        try {
-//            Client client = Client.create();
-//            WebResource webResource = client
-//                    .resource(restBaseAddressStatistics + "add");
-//
-//            String payload = this.getStatisticPayload(s);
-//
-//            ClientResponse response = webResource.type("application/json")
-//                    .post(ClientResponse.class, payload);
-//
-//            /*
-//            // if the id is not present in the system
-//            int status = response.getStatus();
-//
-//
-//            if (status == 200) {
-//                System.out.println("STATISTIC SENT TO THE REST API");
-//                System.out.println(payload);
-//            } else {
-//                System.out.println("ERROR SENDING STATISTIC: status code " + status);
-//            }
-//             */
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+    public void sendStatistic(Statistic s){
+        try {
+            Client client = Client.create();
+            WebResource webResource = client
+                    .resource(restBaseAddressStatistics + "add");
+
+            String payload = this.getStatisticPayload(s);
+
+            ClientResponse response = webResource.type("application/json")
+                    .post(ClientResponse.class, payload);
+
+            /*
+            // if the id is not present in the system
+            int status = response.getStatus();
+
+            if (status == 200) {
+                System.out.println("STATISTIC SENT TO THE REST API");
+                System.out.println(payload);
+            } else {
+                System.out.println("ERROR SENDING STATISTIC: status code " + status);
+            }
+             */
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     /*
     Send quit request to the API

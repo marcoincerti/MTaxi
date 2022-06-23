@@ -2,6 +2,7 @@ package MQTT;
 
 import SETA.Ride;
 import com.mtaxi.grpc.MTaxisService;
+import com.mtaxi.grpc.RideAssignmentGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
@@ -29,9 +30,9 @@ public class RideAssignment extends Thread{
                 ManagedChannelBuilder.forTarget(receiver.getIp() + ":" + receiver.getPort())
                         .usePlaintext().build();
 
-        OrderAssignmentGrpc.OrderAssignmentStub stub = OrderAssignmentGrpc.newStub(channel);
+        RideAssignmentGrpc.RideAssignmentStub stub = RideAssignmentGrpc.newStub(channel);
 
-        MTaxisService.OrderRequest req = MTaxisService.OrderRequest.newBuilder()
+        MTaxisService.RideRequest req = MTaxisService.RideRequest.newBuilder()
                 .setId(ride.id)
                 .setStart(
                         MTaxisService.Coordinates.newBuilder()
@@ -47,9 +48,9 @@ public class RideAssignment extends Thread{
                 )
                 .build();
 
-        stub.assignOrder(req, new StreamObserver<MTaxisService.OrderResponse>() {
+        stub.assignRide(req, new StreamObserver<MTaxisService.RideResponse>() {
             @Override
-            public void onNext(MTaxisService.OrderResponse value) {
+            public void onNext(MTaxisService.RideResponse value) {
                 System.out.println("\nORDER COMPLETED:\n\t- order id: " + ride.id
                         + "\n\t- drone id: " + receiver.getId() + "\n");
                 mTaxi.statisticsMonitor.addStatistic(value);

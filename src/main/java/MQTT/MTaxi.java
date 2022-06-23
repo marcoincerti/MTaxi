@@ -1,7 +1,11 @@
 package MQTT;
 
 import java.sql.Timestamp;
+
+import Grpc.GrpcServer;
 import SETA.Ride;
+import Simulators.Measurement;
+import com.mtaxi.grpc.MTaxisService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,17 +50,17 @@ public class MTaxi implements Comparable<MTaxi>{
     protected boolean isMaster;
     private final Object masterLock;
 
-    //private MonitorOrders monitorOrders;
+    private MQTTBroker mqttBroker;
     protected RideQueue rideQueue;
-    //protected StatisticsMonitor statisticsMonitor;
+    protected StatisticsMonitor statisticsMonitor;
 
     /*
     GRPC server, ping, quit, print and pollution threads.
      */
-    //private GrpcServer grpcServer;
-    //private PingService pingService;
-    //private QuitDrone quitDrone;
-    //private PrintDroneInfo printDroneInfo;
+    private GrpcServer grpcServer;
+    private PingService pingService;
+    private QuitMTaxi quitMTaxi;
+    private PrintMTaxiInfo printDroneInfo;
     //protected PollutionSensor pollutionSensor;
 
     public MTaxi(int id, String ip, int port) {
@@ -112,31 +116,31 @@ public class MTaxi implements Comparable<MTaxi>{
             return;
         }
 
-//        // start quit service
-//        quitDrone = new QuitDrone(this);
-//        quitDrone.start();
-//
-//        // start grpc server to respond
-//        grpcServer = new GrpcServer(this);
-//        grpcServer.start();
-//
-//        // send everyone my info
-//        dronesList.sendDroneInfo();
-//
-//
-//        // becomeMaster, it is a separate function
-//        // as one might become it later
-//        if (isMaster())
-//            becomeMaster();
-//
-//        pingService = new PingService(this);
-//        pingService.start();
-//
-//        printDroneInfo = new PrintDroneInfo(this);
-//        printDroneInfo.start();
-//
-//        pollutionSensor = new PollutionSensor(this);
-//        pollutionSensor.start();
+        // start quit service
+        quitMTaxi = new QuitMTaxi(this);
+        quitMTaxi.start();
+
+        // start grpc server to respond
+        grpcServer = new GrpcServer(this);
+        grpcServer.start();
+
+        // send everyone my info
+        mTaxisList.sendMtaxiInfo();
+
+
+        // becomeMaster, it is a separate function
+        // as one might become it later
+        if (isMaster())
+            //becomeMaster();
+
+        pingService = new PingService(this);
+        pingService.start();
+
+        printDroneInfo = new PrintMTaxiInfo(this);
+        printDroneInfo.start();
+
+        //pollutionSensor = new PollutionSensor(this);
+        //pollutionSensor.start();
     }
 
     /*
@@ -173,102 +177,102 @@ public class MTaxi implements Comparable<MTaxi>{
     an election nor a delivery is in progress, when a drone is
     master it also empty the order queue and send the stats to the REST API.
      */
-//    public void stop() {
-//        if(!isQuitting()) {
-//            setIsQuitting(true);
-//            System.out.println("\n\nQUIT RECEIVED:");
-//
-//            /*
-//            Disconnect mqtt client to not receive new orders
-//             */
-//            if (isMaster()) {
-//                try {
-//                    monitorOrders.disconnect();
-//                } catch (NullPointerException e ) {
-//                    System.out.println("Monitor orders was not initialized");
-//                }
-//            }
-//            /*
-//            Wait if there is an election in progress
-//             */
-//            while (isParticipant()) {
-//                //System.out.println("\t- Election in progress, can't quit now...");
-//                synchronized (participantLock) {
-//
-//                    try {
-//                        participantLock.wait(3000);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//
-//            /*
-//            A delivery is in progress, need to wait
-//             */
-//            while (!isAvailable()) {
-//                System.out.println("\t- Delivery in progress, can't quit now...");
-//                synchronized (isAvailableLock) {
-//                    try {
-//                        isAvailableLock.wait(2000);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//
-//            if (isMaster()) {
-//                // this make sure to run orderqueue until it's empty
-//                try {
-//                    orderQueue.setExit(true);
-//                /*
-//                if orders are still in the queue, notifyAll, as
-//                there might be a produce that's stuck.
-//                Then wait on the queue, there will be a notify when all the
-//                current deliveries are finished
-//                 */
-//                    if (!orderQueue.isEmpty()) {
-//                        System.out.println(orderQueue);
-//                        try {
-//                            synchronized (orderQueue.queueLock) {
-//                                orderQueue.queueLock.notifyAll();
-//                                orderQueue.queueLock.wait();
-//                            }
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                } catch (NullPointerException e ){
-//                    System.out.println("Order queue was not initialized");
-//                }
-//                System.out.println("\t- All orders have been assigned\n" +
-//                        "\t- Sending statistics to the REST API...");
-//                try {
-//                    synchronized (statisticsMonitor.statisticLock) {
-//                        statisticsMonitor.statisticLock.notify();
-//                    }
-//                    synchronized (statisticsMonitor.statisticLock) {
-//                        try {
-//                            statisticsMonitor.statisticLock.wait();
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                } catch (NullPointerException e ){
-//                    System.out.println("Statistic monitor was not initialized");
-//                }
-//                System.out.println("\t- STATS SENT");
-//            }
-//
-//            grpcServer.interrupt();
-//            System.out.println("\t- GRPC server interrupted");
-//            restMethods.quit();
-//            System.out.println("\t- REST API delete sent");
-//            System.exit(0);
-//        } else {
-//            System.out.println("QUIT IS ALREADY IN PROGRESS");
-//        }
-//    }
+    public void stop() {
+        if(!isQuitting()) {
+            setIsQuitting(true);
+            System.out.println("\n\nQUIT RECEIVED:");
+
+            /*
+            Disconnect mqtt client to not receive new orders
+             */
+            if (isMaster()) {
+                try {
+                    mqttBroker.disconnect();
+                } catch (NullPointerException e ) {
+                    System.out.println("Monitor orders was not initialized");
+                }
+            }
+            /*
+            Wait if there is an election in progress
+             */
+            while (isParticipant()) {
+                //System.out.println("\t- Election in progress, can't quit now...");
+                synchronized (participantLock) {
+
+                    try {
+                        participantLock.wait(3000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            /*
+            A delivery is in progress, need to wait
+             */
+            while (!isAvailable()) {
+                System.out.println("\t- Delivery in progress, can't quit now...");
+                synchronized (isAvailableLock) {
+                    try {
+                        isAvailableLock.wait(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            if (isMaster()) {
+                // this make sure to run orderqueue until it's empty
+                try {
+                    rideQueue.setExit(true);
+                /*
+                if orders are still in the queue, notifyAll, as
+                there might be a produce that's stuck.
+                Then wait on the queue, there will be a notify when all the
+                current deliveries are finished
+                 */
+                    if (!rideQueue.isEmpty()) {
+                        System.out.println(rideQueue);
+                        try {
+                            synchronized (rideQueue.queueLock) {
+                                rideQueue.queueLock.notifyAll();
+                                rideQueue.queueLock.wait();
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } catch (NullPointerException e ){
+                    System.out.println("Order queue was not initialized");
+                }
+                System.out.println("\t- All orders have been assigned\n" +
+                        "\t- Sending statistics to the REST API...");
+                try {
+                    synchronized (statisticsMonitor.statisticLock) {
+                        statisticsMonitor.statisticLock.notify();
+                    }
+                    synchronized (statisticsMonitor.statisticLock) {
+                        try {
+                            statisticsMonitor.statisticLock.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } catch (NullPointerException e ){
+                    System.out.println("Statistic monitor was not initialized");
+                }
+                System.out.println("\t- STATS SENT");
+            }
+
+            grpcServer.interrupt();
+            System.out.println("\t- GRPC server interrupted");
+            restMethods.quit();
+            System.out.println("\t- REST API delete sent");
+            System.exit(0);
+        } else {
+            System.out.println("QUIT IS ALREADY IN PROGRESS");
+        }
+    }
 
     /*
     Enter the ring overlay network,
@@ -311,59 +315,59 @@ public class MTaxi implements Comparable<MTaxi>{
 //                    .build());
 //        }
 //    }
-//
-//    /*
-//    Delivery simulation, the Drone sleeps for 5 seconds,
-//    then it sends the delivery response,
-//     */
-//    public DroneService.OrderResponse deliver(DroneService.OrderRequest request) {
-//        setAvailable(false);
-//        int[] orderStartPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
-//        int[] orderEndPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
-//        decreaseBattery();
-//        try {
-//            Thread.sleep(5000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-//        double deliveryKm = DronesList.distance(getCoordinates(), orderStartPosition) +
-//                DronesList.distance(orderStartPosition, orderEndPosition);
-//
-//        DroneService.OrderResponse.Builder response = DroneService.OrderResponse.newBuilder()
-//                .setId(getId())
-//                .setTimestamp(
-//                        new Timestamp(System.currentTimeMillis()).getTime()
-//                )
-//                .setNewPosition(
-//                        DroneService.Coordinates.newBuilder()
-//                                .setX(orderEndPosition[0])
-//                                .setY(orderEndPosition[1])
-//                                .build()
-//                )
-//                .setKm(deliveryKm)
-//                .setResidualBattery(getBattery());
-//
+
+    /*
+    Delivery simulation, the Drone sleeps for 5 seconds,
+    then it sends the delivery response,
+     */
+    public MTaxisService.RideResponse deliver(MTaxisService.RideRequest request) {
+        setAvailable(false);
+        int[] orderStartPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
+        int[] orderEndPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
+        decreaseBattery();
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        double deliveryKm = MTaxisList.distance(getCoordinates(), orderStartPosition) +
+                MTaxisList.distance(orderStartPosition, orderEndPosition);
+
+        MTaxisService.RideResponse.Builder response = MTaxisService.RideResponse.newBuilder()
+                .setId(getId())
+                .setTimestamp(
+                        new Timestamp(System.currentTimeMillis()).getTime()
+                )
+                .setNewPosition(
+                        MTaxisService.Coordinates.newBuilder()
+                                .setX(orderEndPosition[0])
+                                .setY(orderEndPosition[1])
+                                .build()
+                )
+                .setKm(deliveryKm)
+                .setResidualBattery(getBattery());
+
 //        try {
 //            for (Measurement m : pollutionSensor.getDeliveryPollution()) {
-//                response.addMeasurements(DroneService.Measurement.newBuilder()
+//                response.addMeasurements(MTaxisService.Measurement.newBuilder()
 //                        .setAvg(m.getValue()).build());
 //            }
 //        } catch (NullPointerException e ) {
-//            response.addMeasurements(DroneService.Measurement.newBuilder()
+//            response.addMeasurements(MTaxisService.Measurement.newBuilder()
 //                    .setAvg(0).build());
 //        }
-//
-//        setCoordinates(orderEndPosition);
-//        incrementTotKm(deliveryKm);
-//        incrementTotDeliveries();
-//
-//        System.out.println("\nDELIVERY COMPLETED: \n\t- New position: [" + orderEndPosition[0] + ", " + orderEndPosition[1] + "]");
-//        System.out.println("\t- Residual battery: " + getBattery() + "%\n");
-//        setAvailable(true);
-//
-//        return response.build();
-//    }
+
+        setCoordinates(orderEndPosition);
+        incrementTotKm(deliveryKm);
+        incrementTotDeliveries();
+
+        System.out.println("\nDELIVERY COMPLETED: \n\t- New position: [" + orderEndPosition[0] + ", " + orderEndPosition[1] + "]");
+        System.out.println("\t- Residual battery: " + getBattery() + "%\n");
+        setAvailable(true);
+
+        return response.build();
+    }
 
     /*
     Used to sort the drone list in enter ring

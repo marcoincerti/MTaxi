@@ -1,5 +1,7 @@
 package MQTT;
 
+import Grpc.GetInfoClient;
+import Grpc.SendInfoClient;
 import SETA.Ride;
 import com.mtaxi.grpc.MTaxisService;
 import java.util.ArrayList;
@@ -19,26 +21,26 @@ public class MTaxisList {
     after receiving the response each thread proceeds to star the updateDrone
     procedure, to update the drone information in the droneslist
      */
-//    public void requestMTaxisInfo() {
-//        // list of threads to then stop them
-//        ArrayList<GetInfoClient> threadList = new ArrayList<>();
-//
-//        int i = 0;
-//        for ( Drone d : getDronesList() ) {
-//            GetInfoClient c = new GetInfoClient(drone, d, i);
-//            threadList.add(c);
-//            c.start();
-//            i++;
-//        }
-//
-//        for ( GetInfoClient t : threadList) {
-//            try {
-//                t.join();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
+    public void requestMTaxisInfo() {
+        // list of threads to then stop them
+        ArrayList<GetInfoClient> threadList = new ArrayList<>();
+
+        int i = 0;
+        for ( MTaxi d : getmTaxisList() ) {
+            GetInfoClient c = new GetInfoClient(mTaxi, d, i);
+            threadList.add(c);
+            c.start();
+            i++;
+        }
+
+        for ( GetInfoClient t : threadList) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     /*
     Create a thread for each drone in the list
@@ -47,26 +49,26 @@ public class MTaxisList {
     to find out who's the master drone, it will come in handy in case
     the master fails
      */
-//    public void sendDroneInfo(){
-//        // list of threads to then stop them
-//        ArrayList<SendInfoClient> threadList = new ArrayList<>();
-//
-//        for ( Drone d : getDronesList() ) {
-//            SendInfoClient c = new SendInfoClient(drone, d);
-//            threadList.add(c);
-//            c.start();
-//        }
-//
-//        for ( SendInfoClient t : threadList) {
-//            try {
-//                t.join();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        System.out.println(drone);
-//    }
+    public void sendMtaxiInfo(){
+        // list of threads to then stop them
+        ArrayList<SendInfoClient> threadList = new ArrayList<>();
+
+        for ( MTaxi d : getmTaxisList() ) {
+            SendInfoClient c = new SendInfoClient(mTaxi, d);
+            threadList.add(c);
+            c.start();
+        }
+
+        for ( SendInfoClient t : threadList) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println(mTaxi);
+    }
 
     /*
     Add a new Drone to the list
@@ -99,16 +101,16 @@ public class MTaxisList {
     /*
     Update drone info after a master request
      */
-//    public void updateDrone(DroneService.InfoResponse value, int listIndex) {
-//        // concurrent access to the drone list, need sync
-//        ArrayList<Drone> copy = getDronesList();
-//        Drone d = copy.get(listIndex);
-//        d.coordinates[0] = value.getPosition().getX();
-//        d.coordinates[1] = value.getPosition().getY();
-//        d.battery = value.getResidualBattery();
-//        d.isMaster = value.getIsMaster();
-//        d.isAvailable = value.getAvailable();
-//    }
+    public void updateMTaxi(MTaxisService.InfoResponse value, int listIndex) {
+        // concurrent access to the drone list, need sync
+        ArrayList<MTaxi> copy = getmTaxisList();
+        MTaxi t = copy.get(listIndex);
+        t.coordinates[0] = value.getPosition().getX();
+        t.coordinates[1] = value.getPosition().getY();
+        t.battery = value.getResidualBattery();
+        t.isMaster = value.getIsMaster();
+        t.isAvailable = value.getAvailable();
+    }
 
     /*
     Called when sending info to others,

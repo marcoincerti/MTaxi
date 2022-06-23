@@ -7,7 +7,6 @@ public class RideQueue extends Thread{
     private final MTaxi mTaxi;
     private final LinkedList<Ride> rideQueue;
     private final LinkedList<RideAssignment> threadList;
-
     protected final Object queueLock;
     private final Object threadLock;
 
@@ -17,7 +16,7 @@ public class RideQueue extends Thread{
     public RideQueue(MTaxi mTaxi) {
         this.mTaxi = mTaxi;
         this.rideQueue = new LinkedList<>();
-        //this.threadList = new LinkedList<>();
+        this.threadList = new LinkedList<>();
         queueLock = new Object();
         threadLock = new Object();
         exitLock = new Object();
