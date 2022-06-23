@@ -1,0 +1,87 @@
+syntax = "proto3";
+package com.mtaxi.grpc;
+
+service InfoGetter {
+  rpc GetInfo (InfoRequest) returns (InfoResponse) {}
+}
+
+message Coordinates {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message InfoRequest {
+  int32 id = 1;
+}
+
+message InfoResponse {
+  int32 id = 1;
+  int32 residualBattery = 2;
+  bool isMaster = 3;
+  Coordinates position = 4;
+  bool available = 5;
+}
+
+service InfoSender {
+  rpc SendInfo (SenderInfoRequest) returns (SenderInfoResponse) {}
+}
+
+message SenderInfoRequest {
+  int32 id = 1;
+  string ip = 2;
+  int32 port = 3;
+  int32 residualBattery = 4;
+  bool isMaster = 5;
+  Coordinates position = 6;
+  bool available = 7;
+}
+
+message SenderInfoResponse {
+  int32 id = 1;
+  bool isMaster = 2;
+}
+
+service OrderAssignment {
+  rpc AssignOrder (OrderRequest) returns (OrderResponse) {}
+}
+
+message OrderRequest {
+  int32 id = 1;
+  Coordinates start = 2;
+  Coordinates end = 3;
+}
+
+message Measurement {
+  double avg = 1;
+}
+
+message OrderResponse {
+  int32 id = 1;
+  int64 timestamp = 2;
+  Coordinates newPosition = 3;
+  double km = 4;
+  repeated Measurement measurements = 5;
+  int32 residualBattery = 6;
+}
+
+service Ping {
+  rpc Alive (PingRequest) returns (PingResponse) {}
+}
+
+message PingRequest {}
+
+message PingResponse {
+  bool isMaster = 1;
+}
+
+service Election {
+  rpc elect (ElectionRequest) returns (ElectionResponse) {}
+}
+
+message ElectionRequest {
+  int32 id = 1;
+  int32 battery = 2;
+  bool elected = 3;
+}
+
+message ElectionResponse {}

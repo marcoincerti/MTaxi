@@ -1,6 +1,5 @@
 package MQTT;
 
-import RestServer.beans.MTaxi;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -99,7 +98,7 @@ public class RestMethods {
                 int port = current.getInt("port");
                 if (id != mTaxi.id) {
                     MTaxi d = new MTaxi(id, ip, port);
-                    mTaxi.dronesList.dronesList.add(d);
+                    //mTaxi.dronesList.dronesList.add(d);
                 }
             }
             mTaxi.isMaster = false;
@@ -110,54 +109,54 @@ public class RestMethods {
         return true;
     }
 
-    private String getStatisticPayload(Statistic s) throws JSONException {
-        JSONObject payload = new JSONObject();
-        payload.put("avgKm", s.getAvgKm());
-        payload.put("avgDelivery", s.getAvgDelivery());
-        payload.put("avgBattery", s.getAvgBattery());
-        payload.put("timestamp", s.getTimestamp());
-        payload.put("avgPollution", s.getAvgPollution());
-        return payload.toString();
-    }
+//    private String getStatisticPayload(Statistic s) throws JSONException {
+//        JSONObject payload = new JSONObject();
+//        payload.put("avgKm", s.getAvgKm());
+//        payload.put("avgDelivery", s.getAvgDelivery());
+//        payload.put("avgBattery", s.getAvgBattery());
+//        payload.put("timestamp", s.getTimestamp());
+//        payload.put("avgPollution", s.getAvgPollution());
+//        return payload.toString();
+//    }
 
-    public void sendStatistic(Statistic s){
-        try {
-            Client client = Client.create();
-            WebResource webResource = client
-                    .resource(restBaseAddressStatistics + "add");
-
-            String payload = this.getStatisticPayload(s);
-
-            ClientResponse response = webResource.type("application/json")
-                    .post(ClientResponse.class, payload);
-
-            /*
-            // if the id is not present in the system
-            int status = response.getStatus();
-
-
-            if (status == 200) {
-                System.out.println("STATISTIC SENT TO THE REST API");
-                System.out.println(payload);
-            } else {
-                System.out.println("ERROR SENDING STATISTIC: status code " + status);
-            }
-             */
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public void sendStatistic(Statistic s){
+//        try {
+//            Client client = Client.create();
+//            WebResource webResource = client
+//                    .resource(restBaseAddressStatistics + "add");
+//
+//            String payload = this.getStatisticPayload(s);
+//
+//            ClientResponse response = webResource.type("application/json")
+//                    .post(ClientResponse.class, payload);
+//
+//            /*
+//            // if the id is not present in the system
+//            int status = response.getStatus();
+//
+//
+//            if (status == 200) {
+//                System.out.println("STATISTIC SENT TO THE REST API");
+//                System.out.println(payload);
+//            } else {
+//                System.out.println("ERROR SENDING STATISTIC: status code " + status);
+//            }
+//             */
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     /*
     Send quit request to the API
      */
     public void quit() {
-        System.out.println("Quitting drone " + drone.id);
+        System.out.println("Quitting drone " + mTaxi.id);
         try {
             Client client = Client.create();
             // calling a DELETE host/remove/id removes the drone with the given id
             WebResource webResource = client
-                    .resource(restBaseAddressDrones + "remove/" + drone.id);
+                    .resource(restBaseAddressMTaxi + "remove/" + mTaxi.id);
 
             ClientResponse response = webResource.type("application/json")
                     .delete(ClientResponse.class);
@@ -167,10 +166,10 @@ public class RestMethods {
 
             if (status == 200) {
                 // id found
-                System.out.println("Drone " + drone.id + " removed from REST api");
+                System.out.println("Drone " + mTaxi.id + " removed from REST api");
             } else if (status == 404) {
                 // if rest api gives a conflict response
-                System.out.println("Drone " + drone.id + " was not found on rest api");
+                System.out.println("Drone " + mTaxi.id + " was not found on rest api");
             }
         } catch (Exception e) {
             e.printStackTrace();

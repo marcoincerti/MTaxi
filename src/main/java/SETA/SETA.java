@@ -12,7 +12,7 @@ import static java.lang.Math.abs;
 
 public class SETA {
 
-    static Ride generateRandomOrder(Random rd, int id){
+    static Ride generateRandomRide(Random rd, int id){
         int x1, y1, x2, y2;
 
         do {
@@ -51,8 +51,8 @@ public class SETA {
             Object sleep = new Object();
             synchronized (sleep) {
                 for (int i = 0; i < 500; i = i + 2) {
-                    Ride r = generateRandomOrder(rd, i);
-                    Ride r2 = generateRandomOrder(rd, i+1);
+                    Ride r = generateRandomRide(rd, i);
+                    Ride r2 = generateRandomRide(rd, i+1);
                     String payload = r.getJson();
                     String payload2 = r2.getJson();
                     MqttMessage message = new MqttMessage(payload.getBytes());
