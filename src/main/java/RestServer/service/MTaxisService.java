@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 @Path("mtaxis")
 public class MTaxisService {
+
     @GET
     @Produces({"application/json", "application/xml"})
     public Response getMTaxis(){
@@ -57,4 +58,5 @@ public class MTaxisService {
         else
             return Response.status(Response.Status.NOT_FOUND).build();
     }
+
 }

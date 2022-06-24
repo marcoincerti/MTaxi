@@ -13,13 +13,13 @@ import static java.lang.Math.abs;
 @XmlAccessorType (XmlAccessType.FIELD)
 public class MTaxis {
 
-    @XmlElement(name = "mtaxis")
+    @XmlElement(name="drones")
     private ArrayList<MTaxi> mTaxisList;
 
     private static MTaxis instance;
 
     private MTaxis() {
-        mTaxisList = new ArrayList<MTaxi>();
+        mTaxisList = new ArrayList<MTaxi>() ;
     }
 
     //singleton
@@ -41,8 +41,9 @@ public class MTaxis {
     }
 
     public synchronized CoordMTaxiList add(MTaxi u){
-        for ( MTaxi t : this.getmTaxisList() ) {
-            if (u.getId() == t.getId())
+
+        for ( MTaxi d : this.getmTaxisList() ) {
+            if (u.getId() == d.getId())
                 return null;
         }
         this.mTaxisList.add(u);
@@ -50,18 +51,18 @@ public class MTaxis {
     }
 
     public synchronized MTaxi getById(int id){
-        for ( MTaxi t : this.getmTaxisList() ) {
-            if ( id == t.getId())
-                return t;
+        for ( MTaxi d : this.getmTaxisList() ) {
+            if ( id == d.getId())
+                return d;
         }
         return null;
     }
 
     public synchronized MTaxi deleteById(int id) {
-        for ( MTaxi t : this.mTaxisList ) {
-            if (t.getId() == id) {
-                this.mTaxisList.remove(t);
-                return t;
+        for ( MTaxi d : this.mTaxisList ) {
+            if (d.getId() == id) {
+                this.mTaxisList.remove(d);
+                return d;
             }
         }
         return null;

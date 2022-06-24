@@ -11,7 +11,7 @@ import org.codehaus.jettison.json.JSONObject;
 public class RestMethods {
     MTaxi mTaxi;
     // rest api base
-    public static String restBaseAddressMTaxi = "http://localhost:1337/mtaxis/";
+    public static String restBaseAddressMTaxis = "http://localhost:1337/mtaxis/";
     public static String restBaseAddressStatistics = "http://localhost:1337/statistics/";
 
     public RestMethods(MTaxi mTaxi) {
@@ -26,7 +26,7 @@ public class RestMethods {
         try {
             Client client = Client.create();
             WebResource webResource = client
-                    .resource(restBaseAddressMTaxi + "add");
+                    .resource(restBaseAddressMTaxis + "add");
 
             String payload = this.getInitializePostPayload();
 
@@ -39,7 +39,7 @@ public class RestMethods {
             if (status == 200) {
                 // no conflict, unpack the response and go on
                 if (unpackInitializeResponse(response.getEntity(String.class))) {
-                    System.out.println("\t- MTaxi " + mTaxi.id + " initialization completed");
+                    System.out.println("\t- Drone " + mTaxi.id + " initialization completed");
                     return true;
                 }
             } else if (status == 409) {
@@ -71,6 +71,7 @@ public class RestMethods {
     update the drone list
      */
     private boolean unpackInitializeResponse(String response) {
+
         JSONObject input = null;
         try {
             input = new JSONObject(response);
@@ -90,7 +91,7 @@ public class RestMethods {
         as only one drone is in the system, i.e. the drone becomes the master
          */
         try {
-            JSONArray list = input.getJSONArray("mtaxisList");
+            JSONArray list = input.getJSONArray("dronesList");
             for (int i = 0; i < list.length(); i++) {
                 JSONObject current = list.getJSONObject(i);
                 int id = current.getInt("id");
@@ -134,6 +135,7 @@ public class RestMethods {
             // if the id is not present in the system
             int status = response.getStatus();
 
+
             if (status == 200) {
                 System.out.println("STATISTIC SENT TO THE REST API");
                 System.out.println(payload);
@@ -150,12 +152,12 @@ public class RestMethods {
     Send quit request to the API
      */
     public void quit() {
-        System.out.println("Quitting mtaxi " + mTaxi.id);
+        System.out.println("Quitting drone " + mTaxi.id);
         try {
             Client client = Client.create();
             // calling a DELETE host/remove/id removes the drone with the given id
             WebResource webResource = client
-                    .resource(restBaseAddressMTaxi + "remove/" + mTaxi.id);
+                    .resource(restBaseAddressMTaxis + "remove/" + mTaxi.id);
 
             ClientResponse response = webResource.type("application/json")
                     .delete(ClientResponse.class);
@@ -165,10 +167,10 @@ public class RestMethods {
 
             if (status == 200) {
                 // id found
-                System.out.println("MTaxi " + mTaxi.id + " removed from REST api");
+                System.out.println("Drone " + mTaxi.id + " removed from REST api");
             } else if (status == 404) {
                 // if rest api gives a conflict response
-                System.out.println("MTaxi " + mTaxi.id + " was not found on rest api");
+                System.out.println("Drone " + mTaxi.id + " was not found on rest api");
             }
         } catch (Exception e) {
             e.printStackTrace();

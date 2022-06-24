@@ -1,8 +1,9 @@
 package RestServer.beans;
-
 import java.util.ArrayList;
+import javax.xml.bind.annotation.XmlRootElement;
 
 //Class for coordinates and taxi
+@XmlRootElement
 public class CoordMTaxiList {
     private ArrayList<MTaxi> mTaxisList;
     private int[] coordinates;
@@ -15,9 +16,7 @@ public class CoordMTaxiList {
         this.coordinates = coordinates;
     }
 
-    public ArrayList<MTaxi> getmTaxisList() {
-        return mTaxisList;
-    }
+    public ArrayList<MTaxi> getmTaxisList() {return mTaxisList;}
 
     public void setmTaxisList(ArrayList<MTaxi> mTaxisList) {
         this.mTaxisList = mTaxisList;

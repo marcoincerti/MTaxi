@@ -1,7 +1,5 @@
 package MQTT;
 
-import RestServer.beans.MTaxi;
-import RestServer.beans.MTaxis;
 import org.eclipse.paho.client.mqttv3.*;
 import java.sql.Timestamp;
 import java.util.Arrays;
