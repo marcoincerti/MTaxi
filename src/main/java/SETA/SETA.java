@@ -36,10 +36,6 @@ public class SETA {
             client = new MqttClient(broker, clientId);
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
-            //connOpts.setUserName(username); // optional
-            //connOpts.setPassword(password.toCharArray()); // optional
-            //connOpts.setWill("this/is/a/topic","will message".getBytes(),1,false);  // optional
-            //connOpts.setKeepAliveInterval(60);  // optional
 
             // Connect the client
             System.out.println(clientId + " Connecting Broker " + broker);

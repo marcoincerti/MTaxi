@@ -1,5 +1,6 @@
 package MQTT;
 
+import SETA.Ride;
 import org.eclipse.paho.client.mqttv3.*;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -40,12 +41,12 @@ public class MQTTBroker extends Thread{
                     String time = new Timestamp(System.currentTimeMillis()).toString();
                     String receivedMessage = new String(message.getPayload());
 
-//                    Order o = Order.unpackJson(receivedMessage);
-//                    if (o.id == -1){
-//                        System.out.println("ERROR while unpacking order json");
-//                    } else {
-//                        queue.produce(o);
-//                    }
+                    Ride r = Ride.unpackJson(receivedMessage);
+                    if (r.id == -1){
+                        System.out.println("ERROR while unpacking order json");
+                    } else {
+                        queue.produce(r);
+                    }
                 }
 
                 public void connectionLost(Throwable cause) {

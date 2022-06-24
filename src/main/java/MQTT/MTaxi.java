@@ -7,10 +7,6 @@ import SETA.Ride;
 import Simulators.Measurement;
 import com.mtaxi.grpc.MTaxisService;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Random;
-import java.util.Collections;
 import java.util.Random;
 
 public class MTaxi implements Comparable<MTaxi>{
