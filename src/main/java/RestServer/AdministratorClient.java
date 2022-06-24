@@ -12,8 +12,8 @@ import java.util.Scanner;
 
 public class AdministratorClient {
 
-    public static String restBaseAddressMTaxis = "http://localhost:1337/mTaxis/";
-    //public static String restBaseAddressStatistics = "http://localhost:1337/statistics/";
+    public static String restBaseAddressMTaxis = "http://localhost:1337/mtaxis/";
+    public static String restBaseAddressStatistics = "http://localhost:1337/statistics/";
     public static Client client = Client.create();
     public static Scanner sc=new Scanner(System.in);
 
@@ -23,7 +23,7 @@ public class AdministratorClient {
             "\t(3) Get the average number of deliveries between two timestamps\n" +
             "\t(4) Get the average km between two timestamps\n" +
             "\t(5) Quit\n\n" +
-            "Insert a command between 1 and 5: ";
+            "Insert a command between 0 and 5: ";
 
     private static void getmTaxis(){
         WebResource webResource = client
@@ -43,7 +43,7 @@ public class AdministratorClient {
         }
     }
 
-   /* private static void getNStats(){
+   private static void getNStats(){
         System.out.print("\nEnter the number of statistics you want: ");
         int n = sc.nextInt();
         WebResource webResource = client
@@ -95,7 +95,7 @@ public class AdministratorClient {
         System.out.println("Average number of km " +
                 "between " + t1 + " and " + t2 + ": " +
                 response.getEntity(String.class));
-    }*/
+    }
 
 
     public static void main(String[] args){

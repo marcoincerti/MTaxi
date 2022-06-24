@@ -13,7 +13,7 @@ import static java.lang.Math.abs;
 @XmlAccessorType (XmlAccessType.FIELD)
 public class MTaxis {
 
-    @XmlElement(name = "mTaxis")
+    @XmlElement(name = "mtaxis")
     private ArrayList<MTaxi> mTaxisList;
 
     private static MTaxis instance;

@@ -8,7 +8,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 
-@Path("mTaxis")
+@Path("mtaxis")
 public class MTaxisService {
     @GET
     @Produces({"application/json", "application/xml"})

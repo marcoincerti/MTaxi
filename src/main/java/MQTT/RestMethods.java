@@ -11,7 +11,7 @@ import org.codehaus.jettison.json.JSONObject;
 public class RestMethods {
     MTaxi mTaxi;
     // rest api base
-    public static String restBaseAddressMTaxi = "http://localhost:1337/mTaxi/";
+    public static String restBaseAddressMTaxi = "http://localhost:1337/mtaxis/";
     public static String restBaseAddressStatistics = "http://localhost:1337/statistics/";
 
     public RestMethods(MTaxi mTaxi) {
@@ -71,7 +71,6 @@ public class RestMethods {
     update the drone list
      */
     private boolean unpackInitializeResponse(String response) {
-
         JSONObject input = null;
         try {
             input = new JSONObject(response);
@@ -91,7 +90,7 @@ public class RestMethods {
         as only one drone is in the system, i.e. the drone becomes the master
          */
         try {
-            JSONArray list = input.getJSONArray("dronesList");
+            JSONArray list = input.getJSONArray("mtaxisList");
             for (int i = 0; i < list.length(); i++) {
                 JSONObject current = list.getJSONObject(i);
                 int id = current.getInt("id");
@@ -99,7 +98,7 @@ public class RestMethods {
                 int port = current.getInt("port");
                 if (id != mTaxi.id) {
                     MTaxi d = new MTaxi(id, ip, port);
-                    //mTaxi.dronesList.dronesList.add(d);
+                    mTaxi.mTaxisList.mTaxisList.add(d);
                 }
             }
             mTaxi.isMaster = false;
@@ -151,7 +150,7 @@ public class RestMethods {
     Send quit request to the API
      */
     public void quit() {
-        System.out.println("Quitting drone " + mTaxi.id);
+        System.out.println("Quitting mtaxi " + mTaxi.id);
         try {
             Client client = Client.create();
             // calling a DELETE host/remove/id removes the drone with the given id
@@ -166,10 +165,10 @@ public class RestMethods {
 
             if (status == 200) {
                 // id found
-                System.out.println("Drone " + mTaxi.id + " removed from REST api");
+                System.out.println("MTaxi " + mTaxi.id + " removed from REST api");
             } else if (status == 404) {
                 // if rest api gives a conflict response
-                System.out.println("Drone " + mTaxi.id + " was not found on rest api");
+                System.out.println("MTaxi " + mTaxi.id + " was not found on rest api");
             }
         } catch (Exception e) {
             e.printStackTrace();

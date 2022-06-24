@@ -70,7 +70,7 @@ public class MTaxi implements Comparable<MTaxi>{
         battery = 100;
         mTaxisList = new MTaxisList(this);
         coordinates = new int[2];
-        //restMethods = new RestMethods(this);
+        restMethods = new RestMethods(this);
         isAvailable = true;
         isQuitting = false;
         successor = null;
@@ -546,9 +546,9 @@ public class MTaxi implements Comparable<MTaxi>{
         return ret + "\n============================\n";
     }
 
-//    public Drone getSuccessor(){
-//        return successor;
-//    }
+    public MTaxi getSuccessor(){
+        return successor;
+    }
 
     public static void main(String[] args) {
 
