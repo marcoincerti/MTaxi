@@ -20,7 +20,7 @@ public class GrpcServer extends Thread{
                 .addService(new InfoSenderImpl(mTaxi))
                 .addService(new RideAssignmentImpl(mTaxi))
                 .addService(new PingImpl(mTaxi))
-                //.addService(new ElectionImpl(mTaxi))
+                .addService(new ElectionImpl(mTaxi))
                 .build();
 
         try {

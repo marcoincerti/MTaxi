@@ -91,7 +91,7 @@ public class RestMethods {
         as only one mtaxi is in the system, i.e. the mtaxi becomes the master
          */
         try {
-            JSONArray list = input.getJSONArray("mtaxisList");
+            JSONArray list = input.getJSONArray("mTaxisList");
             for (int i = 0; i < list.length(); i++) {
                 JSONObject current = list.getJSONObject(i);
                 int id = current.getInt("id");

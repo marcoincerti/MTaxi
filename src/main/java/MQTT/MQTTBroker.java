@@ -10,7 +10,7 @@ public class MQTTBroker extends Thread{
     private MqttClient client;
     private static String broker = "tcp://localhost:1883";
     private final String clientId;
-    private static String topic = "seta/smartcity/rides/+";
+    private static String topic = "seta/smartcity/rides/";
     private RideQueue queue;
 
     public MQTTBroker(MTaxi mTaxi, RideQueue queue) {

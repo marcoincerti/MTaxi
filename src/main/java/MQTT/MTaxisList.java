@@ -116,24 +116,24 @@ public class MTaxisList {
     Called when sending info to others,
     it update the master
      */
-//    public synchronized void updateMasterDrone(DroneService.SenderInfoResponse value){
-//        int id = value.getId();
-//        boolean isMaster = value.getIsMaster();
-//        for ( Drone d : dronesList ) {
-//            if (d.getId() == id)
-//                d.isMaster = isMaster;
-//        }
-//    }
+    public synchronized void updateMasterMTaxi(MTaxisService.SenderInfoResponse value){
+        int id = value.getId();
+        boolean isMaster = value.getIsMaster();
+        for ( MTaxi t : mTaxisList ) {
+            if (t.getId() == id)
+                t.isMaster = isMaster;
+        }
+    }
 
 
-//    public synchronized void setNewMaster(int id){
-//        System.out.println("Setting the new master: " + id);
-//        for ( Drone d : dronesList ) {
-//            if (d.getId() == id)
-//                d.isMaster = true;
-//        }
-//
-//    }
+    public synchronized void setNewMaster(int id){
+        System.out.println("Setting the new master: " + id);
+        for ( MTaxi t : mTaxisList ) {
+            if (t.getId() == id)
+                t.isMaster = true;
+        }
+
+    }
 
     /*
     Distance function to find closest drone
@@ -173,7 +173,7 @@ public class MTaxisList {
         if (closest != null) {
             closest.setAvailable(false);
             if (closest != this.mTaxi)
-                closest.decreaseBattery();
+                closest.decreaseBattery(dist);
         }
 
         return closest;

@@ -1,17 +1,19 @@
 package MQTT;
 
-import java.sql.Timestamp;
-
+import Grpc.ElectClient;
 import Grpc.GrpcServer;
-import SETA.Ride;
 import Simulators.Measurement;
+import Simulators.PollutionSensor;
 import com.mtaxi.grpc.MTaxisService;
 
-import java.util.Arrays;
-import java.util.Random;
+import java.sql.Timestamp;
+import java.util.*;
 
 public class MTaxi implements Comparable<MTaxi>{
 
+    /*
+    Drone fields and required locks
+     */
     protected int id;
     protected String ip;
     protected int port;
@@ -57,9 +59,8 @@ public class MTaxi implements Comparable<MTaxi>{
     private GrpcServer grpcServer;
     private PingService pingService;
     private QuitMTaxi quitMTaxi;
-    private PrintMTaxiInfo printDroneInfo;
-    //protected PollutionSensor pollutionSensor;
-
+    private PrintMTaxiInfo printMTaxiInfo;
+    protected PollutionSensor pollutionSensor;
     public MTaxi(int id, String ip, int port) {
         this.id = id;
         this.ip = ip;
@@ -109,7 +110,7 @@ public class MTaxi implements Comparable<MTaxi>{
     public void run(){
         // make rest request
         if (!restMethods.initialize()){
-            System.out.println("An error occurred initializing drone with these specs " + getInfo());
+            System.out.println("An error occurred initializing mTaxi with these specs " + getInfo());
             return;
         }
 
@@ -128,13 +129,13 @@ public class MTaxi implements Comparable<MTaxi>{
         // becomeMaster, it is a separate function
         // as one might become it later
         if (isMaster())
-            //becomeMaster();
+            becomeMaster();
 
         pingService = new PingService(this);
         pingService.start();
 
-        printDroneInfo = new PrintMTaxiInfo(this);
-        printDroneInfo.start();
+        printMTaxiInfo = new PrintMTaxiInfo(this);
+        printMTaxiInfo.start();
 
         //pollutionSensor = new PollutionSensor(this);
         //pollutionSensor.start();
@@ -144,30 +145,30 @@ public class MTaxi implements Comparable<MTaxi>{
     Calling this function a Drone becomes master, so it
     starts to monitor orders and manage the queue
      */
-//    public synchronized void becomeMaster(){
-//        setParticipant(false);
-//        setMaster(true);
-//        System.out.println("\nBECOMING THE NEW MASTER:");
-//        // request drones infos
-//        dronesList.requestDronesInfo();
-//        System.out.println("\t- Other drones info requested");
-//        // start the order queue
-//        if (orderQueue == null) {
-//            orderQueue = new OrderQueue(this);
-//            orderQueue.start();
-//            System.out.println("\t- Order queue started");
-//        }
-//        if (monitorOrders == null) {
-//            monitorOrders = new MonitorOrders(this, orderQueue);
-//            // start the order monitor mqtt client
-//            monitorOrders.start();
-//            System.out.println("\t- MQTT client started\n\n");
-//        }
-//        if(statisticsMonitor == null) {
-//            statisticsMonitor = new StatisticsMonitor(this);
-//            statisticsMonitor.start();
-//        }
-//    }
+    public synchronized void becomeMaster(){
+        setParticipant(false);
+        setMaster(true);
+        System.out.println("\nBECOMING THE NEW MASTER:");
+        // request drones infos
+        mTaxisList.requestMTaxisInfo();
+        System.out.println("\t- Other mTaxi info requested");
+        // start the order queue
+        if (rideQueue == null) {
+            rideQueue = new RideQueue(this);
+            rideQueue.start();
+            System.out.println("\t- Order queue started");
+        }
+        if (mqttBroker == null) {
+            mqttBroker = new MQTTBroker(this, rideQueue);
+            // start the order monitor mqtt client
+            mqttBroker.start();
+            System.out.println("\t- MQTT client started\n\n");
+        }
+        if(statisticsMonitor == null) {
+            statisticsMonitor = new StatisticsMonitor(this);
+            statisticsMonitor.start();
+        }
+    }
 
     /*
     Called after a quit command, ti stops everything making sure
@@ -195,7 +196,6 @@ public class MTaxi implements Comparable<MTaxi>{
             while (isParticipant()) {
                 //System.out.println("\t- Election in progress, can't quit now...");
                 synchronized (participantLock) {
-
                     try {
                         participantLock.wait(3000);
                     } catch (InterruptedException e) {
@@ -277,41 +277,41 @@ public class MTaxi implements Comparable<MTaxi>{
     to simplify implementation it's called
     every time a drone enters the system
      */
-//    public void enterRing(){
-//        ArrayList<Drone> list = dronesList.getDronesList();
-//        list.add(this);
-//        Collections.sort(list);
-//
-//        int i = list.indexOf(this);
-//
-//        successor = (i == list.size()-1)? list.get(0) : list.get(i+1);
-//    }
-//
-//    public synchronized void forwardElection(DroneService.ElectionRequest electionRequest){
-//        if (!isMaster()) {
-//            //System.out.println("Forwarding election");
-//            ElectClient c = new ElectClient(this, electionRequest);
-//            c.start();
+    public void enterRing(){
+        ArrayList<MTaxi> list = mTaxisList.getmTaxisList();
+        list.add(this);
+        Collections.sort(list);
+
+        int i = list.indexOf(this);
+
+        successor = (i == list.size()-1)? list.get(0) : list.get(i+1);
+    }
+
+    public synchronized void forwardElection(MTaxisService.ElectionRequest electionRequest){
+        if (!isMaster()) {
+            //System.out.println("Forwarding election");
+            ElectClient c = new ElectClient(this, electionRequest);
+            c.start();
+        }
+//        else {
+//        System.out.println("Already master");
 //        }
-//        //else {
-//        //System.out.println("Already master");
-//        //}
-//    }
+    }
 
     /*
     Start the election in case of a missed ping response
     by the master
      */
-//    public synchronized void startElection(){
-//        if (!isParticipant()) {
-//            setParticipant(true);
-//            forwardElection(DroneService.ElectionRequest.newBuilder()
-//                    .setId(getId())
-//                    .setBattery(getBattery())
-//                    .setElected(false)
-//                    .build());
-//        }
-//    }
+    public synchronized void startElection(){
+        if (!isParticipant()) {
+            setParticipant(true);
+            forwardElection(MTaxisService.ElectionRequest.newBuilder()
+                    .setId(getId())
+                    .setBattery(getBattery())
+                    .setElected(false)
+                    .build());
+        }
+    }
 
     /*
     Delivery simulation, the Mtaxi sleeps for 5 seconds,
@@ -321,7 +321,7 @@ public class MTaxi implements Comparable<MTaxi>{
         setAvailable(false);
         int[] rideStartPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
         int[] rideEndPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
-        decreaseBattery();
+
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
@@ -330,6 +330,8 @@ public class MTaxi implements Comparable<MTaxi>{
 
         double deliveryKm = MTaxisList.distance(getCoordinates(), rideStartPosition) +
                 MTaxisList.distance(rideStartPosition, rideEndPosition);
+
+        decreaseBattery(deliveryKm);
 
         MTaxisService.RideResponse.Builder response = MTaxisService.RideResponse.newBuilder()
                 .setId(getId())
@@ -394,9 +396,9 @@ public class MTaxi implements Comparable<MTaxi>{
         return ret;
     }
 
-    public void decreaseBattery() {
+    public void decreaseBattery(Double totalKM) {
         synchronized (batteryLock){
-            battery -= 15;
+            battery -= totalKM;
         }
     }
 
@@ -549,7 +551,7 @@ public class MTaxi implements Comparable<MTaxi>{
         */
 
         Random rd = new Random();
-        MTaxi d = new MTaxi(rd.nextInt(1000), "localhost", 10000 + rd.nextInt(30000));
-        d.run();
+        MTaxi t = new MTaxi(rd.nextInt(1000), "localhost", 10000 + rd.nextInt(30000));
+        t.run();
     }
 }

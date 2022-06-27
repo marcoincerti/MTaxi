@@ -50,15 +50,8 @@ public class SendInfoClient extends Thread {
         stub.sendInfo(req, new StreamObserver<SenderInfoResponse>() {
             @Override
             public void onNext(SenderInfoResponse value) {
-                /*
 
-                System.out.println("DRONE RESPONSE");
-                System.out.println(value.getId());
-                System.out.println(value.getPosition().getX() + ", " + value.getPosition().getY());
-                System.out.println(value.getResidualBattery());
-                System.out.println(value.getIsMaster());
-                 */
-               // senderMTaxi.getMTAxisList().updateMasterDrone(value);
+                senderMTaxi.getMTAxisList().updateMasterMTaxi(value);
             }
 
             @Override

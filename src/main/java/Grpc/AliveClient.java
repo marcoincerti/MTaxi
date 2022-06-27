@@ -1,5 +1,6 @@
-package MQTT;
+package Grpc;
 
+import MQTT.MTaxi;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import com.mtaxi.grpc.MTaxisService;
@@ -47,7 +48,7 @@ public class AliveClient extends Thread{
 
                 if (receiverMTaxi.isMaster()) {
                     //System.out.println("MASTER DOWN: starting election");
-                    //senderMTaxi.startElection();
+                    senderMTaxi.startElection();
                 }
             }
 
