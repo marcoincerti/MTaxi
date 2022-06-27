@@ -19,7 +19,7 @@ public class RestMethods {
     }
 
     /*
-    Make initial API request, initialize all the drone fields
+    Make initial API request, initialize all the mtaxi fields
      */
     public boolean initialize() {
         System.out.println("REST API INITIALIZATION: ");
@@ -39,7 +39,7 @@ public class RestMethods {
             if (status == 200) {
                 // no conflict, unpack the response and go on
                 if (unpackInitializeResponse(response.getEntity(String.class))) {
-                    System.out.println("\t- Drone " + mTaxi.id + " initialization completed");
+                    System.out.println("\t- MTaxi " + mTaxi.id + " initialization completed");
                     return true;
                 }
             } else if (status == 409) {
@@ -68,7 +68,7 @@ public class RestMethods {
 
     /*
     Unpack the initialize respose,
-    update the drone list
+    update the mtaxi list
      */
     private boolean unpackInitializeResponse(String response) {
 
@@ -86,12 +86,12 @@ public class RestMethods {
         }
 
         /*
-        unpack drone list
+        unpack mtaxi list
         first request gives out a json object and not a json array,
-        as only one drone is in the system, i.e. the drone becomes the master
+        as only one mtaxi is in the system, i.e. the mtaxi becomes the master
          */
         try {
-            JSONArray list = input.getJSONArray("dronesList");
+            JSONArray list = input.getJSONArray("mtaxisList");
             for (int i = 0; i < list.length(); i++) {
                 JSONObject current = list.getJSONObject(i);
                 int id = current.getInt("id");
@@ -152,10 +152,10 @@ public class RestMethods {
     Send quit request to the API
      */
     public void quit() {
-        System.out.println("Quitting drone " + mTaxi.id);
+        System.out.println("Quitting mTaxi " + mTaxi.id);
         try {
             Client client = Client.create();
-            // calling a DELETE host/remove/id removes the drone with the given id
+            // calling a DELETE host/remove/id removes the mtaxi with the given id
             WebResource webResource = client
                     .resource(restBaseAddressMTaxis + "remove/" + mTaxi.id);
 
@@ -167,10 +167,10 @@ public class RestMethods {
 
             if (status == 200) {
                 // id found
-                System.out.println("Drone " + mTaxi.id + " removed from REST api");
+                System.out.println("MTaxi " + mTaxi.id + " removed from REST api");
             } else if (status == 404) {
                 // if rest api gives a conflict response
-                System.out.println("Drone " + mTaxi.id + " was not found on rest api");
+                System.out.println("MTaxi " + mTaxi.id + " was not found on rest api");
             }
         } catch (Exception e) {
             e.printStackTrace();

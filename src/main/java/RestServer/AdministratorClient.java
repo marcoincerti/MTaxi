@@ -23,7 +23,7 @@ public class AdministratorClient {
             "\t(3) Get the average number of deliveries between two timestamps\n" +
             "\t(4) Get the average km between two timestamps\n" +
             "\t(5) Quit\n\n" +
-            "Insert a command between 0 and 5: ";
+            "Insert a command between 1 and 5: ";
 
     private static void getmTaxis(){
         WebResource webResource = client

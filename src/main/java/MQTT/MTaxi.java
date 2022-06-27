@@ -7,6 +7,7 @@ import SETA.Ride;
 import Simulators.Measurement;
 import com.mtaxi.grpc.MTaxisService;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public class MTaxi implements Comparable<MTaxi>{
@@ -313,13 +314,13 @@ public class MTaxi implements Comparable<MTaxi>{
 //    }
 
     /*
-    Delivery simulation, the Drone sleeps for 5 seconds,
+    Delivery simulation, the Mtaxi sleeps for 5 seconds,
     then it sends the delivery response,
      */
     public MTaxisService.RideResponse deliver(MTaxisService.RideRequest request) {
         setAvailable(false);
-        int[] orderStartPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
-        int[] orderEndPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
+        int[] rideStartPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
+        int[] rideEndPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
         decreaseBattery();
         try {
             Thread.sleep(5000);
@@ -327,8 +328,8 @@ public class MTaxi implements Comparable<MTaxi>{
             e.printStackTrace();
         }
 
-        double deliveryKm = MTaxisList.distance(getCoordinates(), orderStartPosition) +
-                MTaxisList.distance(orderStartPosition, orderEndPosition);
+        double deliveryKm = MTaxisList.distance(getCoordinates(), rideStartPosition) +
+                MTaxisList.distance(rideStartPosition, rideEndPosition);
 
         MTaxisService.RideResponse.Builder response = MTaxisService.RideResponse.newBuilder()
                 .setId(getId())
@@ -337,8 +338,8 @@ public class MTaxi implements Comparable<MTaxi>{
                 )
                 .setNewPosition(
                         MTaxisService.Coordinates.newBuilder()
-                                .setX(orderEndPosition[0])
-                                .setY(orderEndPosition[1])
+                                .setX(rideEndPosition[0])
+                                .setY(rideEndPosition[1])
                                 .build()
                 )
                 .setKm(deliveryKm)
@@ -354,11 +355,11 @@ public class MTaxi implements Comparable<MTaxi>{
 //                    .setAvg(0).build());
 //        }
 
-        setCoordinates(orderEndPosition);
+        setCoordinates(rideEndPosition);
         incrementTotKm(deliveryKm);
         incrementTotDeliveries();
 
-        System.out.println("\nDELIVERY COMPLETED: \n\t- New position: [" + orderEndPosition[0] + ", " + orderEndPosition[1] + "]");
+        System.out.println("\nDELIVERY COMPLETED: \n\t- New position: [" + rideEndPosition[0] + ", " + rideEndPosition[1] + "]");
         System.out.println("\t- Residual battery: " + getBattery() + "%\n");
         setAvailable(true);
 
@@ -526,20 +527,12 @@ public class MTaxi implements Comparable<MTaxi>{
     }
 
     public String toString(){
-        String ret =  "\n======== DRONE INFO ========\n\n" + getInfo();
+        String ret =  "\n******* MTAXI INFO *******\n\n" + getInfo();
         ret += "\n\t- Battery level: " + getBattery() + "%";
         ret += "\n\t- Total km: " + getTotKm();
         ret += "\n\t- Total deliveries: " + getTotDeliveries();
-
-        /*
-        ret += "\n\nOther known drones: [\n";
-
-        for (Drone d : getDronesList().getDronesList())
-            ret += "\n- " + d.getInfo() + ", \n";
-
-        ret += "\n]";
-        */
-        return ret + "\n============================\n";
+        ret += "\n\t- Coordinates: " + Arrays.toString(getCoordinates());
+        return ret + "\n*************************\n";
     }
 
     public MTaxi getSuccessor(){
@@ -549,7 +542,7 @@ public class MTaxi implements Comparable<MTaxi>{
     public static void main(String[] args) {
 
         /*
-        Scanner sc=new Scanner(System.in);
+        Scanner sc = new Scanner(System.in);
 
         System.out.println("Insert drone ID and port");
         Drone d = new Drone(sc.nextInt(), "localhost", sc.nextInt());

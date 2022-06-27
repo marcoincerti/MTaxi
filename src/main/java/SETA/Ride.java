@@ -15,20 +15,20 @@ public class Ride {
     }
 
     public String getJson() throws JSONException {
-        JSONObject order = new JSONObject();
-        order.put("id", this.id);
+        JSONObject ride = new JSONObject();
+        ride.put("id", this.id);
 
         JSONObject startCoordinates = new JSONObject();
         startCoordinates.put("x", this.startCoordinates[0]);
         startCoordinates.put("y", this.startCoordinates[1]);
-        order.put("startCoordinates", startCoordinates);
+        ride.put("startCoordinates", startCoordinates);
 
         JSONObject endCoordinates = new JSONObject();
         endCoordinates.put("x", this.endCoordinates[0]);
         endCoordinates.put("y", this.endCoordinates[1]);
-        order.put("endCoordinates", endCoordinates);
+        ride.put("endCoordinates", endCoordinates);
 
-        return order.toString();
+        return ride.toString();
     }
 
     public static Ride unpackJson(String json) {

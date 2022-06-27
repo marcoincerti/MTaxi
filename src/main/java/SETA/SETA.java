@@ -55,12 +55,40 @@ public class SETA {
                     MqttMessage message2 = new MqttMessage(payload2.getBytes());
                     message.setQos(qos);
                     message2.setQos(qos);
+                    if (r.startCoordinates[0] <= 4){
+                        if (r.startCoordinates[1] <= 4){
+                            topic = topic + "/district1";
+                        }else{
+                            topic = topic + "/district4";
+                        }
+                    }else {
+                        if (r.startCoordinates[1] <= 4) {
+                            topic = topic + "/district2";
+                        } else {
+                            topic = topic + "/district3";
+                        }
+                    }
                     System.out.println(clientId + " Publishing ride 1: " + payload + " ...");
                     client.publish(topic, message);
                     System.out.println(clientId + " Ride published");
+                    topic = "seta/smartcity/rides";
+                    if (r2.startCoordinates[0] <= 4){
+                        if (r2.startCoordinates[1] <= 4){
+                            topic = topic + "/district1";
+                        }else{
+                            topic = topic + "/district4";
+                        }
+                    }else{
+                        if (r2.startCoordinates[1] <= 4){
+                            topic = topic + "/district2";
+                        }else{
+                            topic = topic + "/district3";
+                        }
+                    }
                     System.out.println(clientId + " Publishing ride 2: " + payload2 + " ...");
                     client.publish(topic, message2);
                     System.out.println(clientId + " Ride published");
+                    topic = "seta/smartcity/rides";
                     sleep.wait(5000);
                 }
             }

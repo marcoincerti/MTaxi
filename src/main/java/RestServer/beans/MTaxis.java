@@ -37,6 +37,8 @@ public class MTaxis {
         Random rd = new Random();
         int x = abs(rd.nextInt()%10);
         int y = abs(rd.nextInt()%10);
+        x = ((x  <= 4) ? 0 : 9);
+        y = ((x  <= 4) ? 0 : 9);
         return new int[]{x, y};
     }
 

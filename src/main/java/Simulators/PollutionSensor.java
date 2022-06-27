@@ -13,15 +13,15 @@ public class PollutionSensor extends Thread{
     private MTaxi mTaxi;
     private MeasurementsBuffer sensorBuffer;
     private PM10Simulator simulator;
-    private ArrayList<Measurement> droneBuffer;
-    private final Object droneBufferLock;
+    private ArrayList<Measurement> mTaxiBuffer;
+    private final Object mTaxiBufferLock;
 
     public PollutionSensor(MTaxi mTaxi) {
         this.mTaxi = mTaxi;
         sensorBuffer = new MeasurementsBuffer();
         simulator = new PM10Simulator(sensorBuffer);
-        droneBuffer = new ArrayList<>();
-        droneBufferLock = new Object();
+        mTaxiBuffer = new ArrayList<>();
+        mTaxiBufferLock = new Object();
     }
 
     public void start() {
@@ -51,24 +51,24 @@ public class PollutionSensor extends Thread{
     }
 
     private void addMeasurement(Measurement m) {
-        synchronized (droneBufferLock) {
-            droneBuffer.add(m);
+        synchronized (mTaxiBufferLock) {
+            mTaxiBuffer.add(m);
         }
     }
 
     public ArrayList<Measurement> getDeliveryPollution() {
         ArrayList<Measurement> ret;
-        synchronized (droneBufferLock) {
-            ret = new ArrayList<>(droneBuffer);
-            droneBuffer = new ArrayList<>();
+        synchronized (mTaxiBufferLock) {
+            ret = new ArrayList<>(mTaxiBuffer);
+            mTaxiBuffer = new ArrayList<>();
         }
         return ret;
     }
 
     @Override
     public String toString() {
-        String ret = "DRONE MEASUREMENTS BUFFER";
-        for (Measurement m : droneBuffer) {
+        String ret = "MTAXI MEASUREMENTS BUFFER";
+        for (Measurement m : mTaxiBuffer) {
             ret += m + "\n";
         }
         return ret;

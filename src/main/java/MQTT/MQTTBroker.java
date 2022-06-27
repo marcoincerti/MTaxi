@@ -10,7 +10,7 @@ public class MQTTBroker extends Thread{
     private MqttClient client;
     private static String broker = "tcp://localhost:1883";
     private final String clientId;
-    private static String topic = "seta/smartcity/rides";
+    private static String topic = "seta/smartcity/rides/+";
     private RideQueue queue;
 
     public MQTTBroker(MTaxi mTaxi, RideQueue queue) {
@@ -28,6 +28,11 @@ public class MQTTBroker extends Thread{
             client = new MqttClient(broker, clientId);
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
+            //connOpts.setUserName(username); // optional
+            //connOpts.setPassword(password.toCharArray()); // optional
+            //connOpts.setWill("this/is/a/topic","will message".getBytes(),1,false);  // optional
+            //connOpts.setKeepAliveInterval(60);  // optional
+
 
             // Connect the client
             //System.out.println(clientId + " Connecting Broker " + broker);
