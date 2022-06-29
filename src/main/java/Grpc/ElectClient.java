@@ -44,7 +44,6 @@ public class ElectClient extends Thread{
             stub.elect(request, new StreamObserver<MTaxisService.ElectionResponse>() {
                 @Override
                 public void onNext(MTaxisService.ElectionResponse value) {
-                    //System.out.println("Election response by drone " + receiverDrone.getId());
                 }
 
                 @Override

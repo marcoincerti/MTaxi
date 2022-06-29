@@ -43,7 +43,7 @@ public class GetInfoClient extends Thread {
 
             @Override
             public void onError(Throwable t) {
-                System.out.println("GET INFO ERROR, removing drone " + receiverMTaxi.getId());
+                System.out.println("GET INFO ERROR, removing mtaxi " + receiverMTaxi.getId());
                 senderMTaxi.getMTAxisList().remove(receiverMTaxi);
                 channel.shutdown();
             }

@@ -15,7 +15,7 @@ public class RideAssignmentImpl extends RideAssignmentImplBase {
 
     @Override
     public void assignRide(RideRequest request, StreamObserver<RideResponse> responseObserver) {
-        System.out.println("ORDER ASSIGNMENT RECEIVED: \n\t- order id: " + request.getId());
+        System.out.println("RIDE ASSIGNMENT RECEIVED: \n\t- order id: " + request.getId());
         if (mTaxi.getBattery() < 15){
             responseObserver.onError(new Exception());
         } else {

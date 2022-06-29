@@ -20,7 +20,7 @@ public class PingService extends Thread{
             public void run() {
                 if(!mTaxi.isMaster()) {
                     AliveClient t = null;
-                    for (MTaxi d : mTaxi.getMTAxisList().getmTaxisList()) {
+                    for (MTaxi d : mTaxi.getMTAxisList().getMTaxiList()) {
                         if (d.isMaster()) {
                             t = new AliveClient(mTaxi, d);
                             t.start();

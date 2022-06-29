@@ -10,13 +10,10 @@ import io.grpc.stub.StreamObserver;
 public class InfoGetterImpl extends InfoGetterGrpc.InfoGetterImplBase {
     private final MTaxi mTaxi;
 
-    public InfoGetterImpl(MTaxi mTaxi) {
-        this.mTaxi = mTaxi;
-    }
+    public InfoGetterImpl(MTaxi mTaxi) { this.mTaxi = mTaxi; }
 
     @Override
     public void getInfo(InfoRequest request, StreamObserver<InfoResponse> responseObserver) {
-        //System.out.println("GRPC received at drone " + drone.getId());
 
         Coordinates cord = Coordinates.newBuilder()
                 .setX(mTaxi.getX())
@@ -32,7 +29,7 @@ public class InfoGetterImpl extends InfoGetterGrpc.InfoGetterImplBase {
                 .build();
 
         mTaxi.setParticipant(false);
-        //mTaxi.getMTAxisList().setNewMaster(request.getId());
+        mTaxi.getMTAxisList().setNewMaster(request.getId());
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 

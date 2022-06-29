@@ -26,8 +26,8 @@ public class MTaxisList {
         ArrayList<GetInfoClient> threadList = new ArrayList<>();
 
         int i = 0;
-        for ( MTaxi d : getmTaxisList() ) {
-            GetInfoClient c = new GetInfoClient(mTaxi, d, i);
+        for ( MTaxi t : getMTaxiList() ) {
+            GetInfoClient c = new GetInfoClient(mTaxi, t, i);
             threadList.add(c);
             c.start();
             i++;
@@ -49,12 +49,12 @@ public class MTaxisList {
     to find out who's the master drone, it will come in handy in case
     the master fails
      */
-    public void sendMtaxiInfo(){
+    public void sendMTaxiInfo(){
         // list of threads to then stop them
         ArrayList<SendInfoClient> threadList = new ArrayList<>();
 
-        for ( MTaxi d : getmTaxisList() ) {
-            SendInfoClient c = new SendInfoClient(mTaxi, d);
+        for ( MTaxi t : getMTaxiList() ) {
+            SendInfoClient c = new SendInfoClient(mTaxi, t);
             threadList.add(c);
             c.start();
         }
@@ -93,8 +93,8 @@ public class MTaxisList {
     Remove a drone from the list
     called when master get a response error
      */
-    public synchronized void remove(MTaxi d){
-        mTaxisList.remove(d);
+    public synchronized void remove(MTaxi t){
+        mTaxisList.remove(t);
     }
 
 
@@ -103,7 +103,7 @@ public class MTaxisList {
      */
     public void updateMTaxi(MTaxisService.InfoResponse value, int listIndex) {
         // concurrent access to the drone list, need sync
-        ArrayList<MTaxi> copy = getmTaxisList();
+        ArrayList<MTaxi> copy = getMTaxiList();
         MTaxi t = copy.get(listIndex);
         t.coordinates[0] = value.getPosition().getX();
         t.coordinates[1] = value.getPosition().getY();
@@ -155,25 +155,25 @@ public class MTaxisList {
         Double dist = Double.MAX_VALUE;
         int maxBattery = 0;
 
-        ArrayList<MTaxi> list = getmTaxisList();
+        ArrayList<MTaxi> list = getMTaxiList();
         list.add(mTaxi);
 
-        for ( MTaxi d : list ) {
-            if(d.getX() == -1){
+        for ( MTaxi t : list ) {
+            if(t.getX() == -1){
                 return null;
             }
-            Double currentDistance = distance(r.startCoordinates, d.getCoordinates());
-            if ((d.isAvailable() && d.getBattery() > 15) && (closest == null || currentDistance.compareTo(dist) < 0 ||
-                    (currentDistance.compareTo(dist) == 0 && d.getBattery() > maxBattery))) {
+            Double currentDistance = distance(r.startCoordinates, t.getCoordinates());
+            if ((t.isAvailable() && t.getBattery() > 30) && (closest == null || currentDistance.compareTo(dist) < 0 ||
+                    (currentDistance.compareTo(dist) == 0 && t.getBattery() > maxBattery))) {
                 dist = currentDistance;
-                maxBattery = d.getBattery();
-                closest = d;
+                maxBattery = t.getBattery();
+                closest = t;
             }
         }
         if (closest != null) {
             closest.setAvailable(false);
             if (closest != this.mTaxi)
-                closest.decreaseBattery(dist);
+                closest.decreaseBattery();
         }
 
         return closest;
@@ -182,7 +182,7 @@ public class MTaxisList {
     /*
     Getter that returns a copy so I can unlock the list
      */
-    public synchronized ArrayList<MTaxi> getmTaxisList() {
+    public synchronized ArrayList<MTaxi> getMTaxiList() {
         return new ArrayList<MTaxi>(mTaxisList);
     }
 }

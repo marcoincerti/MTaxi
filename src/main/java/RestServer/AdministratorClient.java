@@ -108,9 +108,9 @@ public class AdministratorClient {
                 command = sc.nextInt();
                 switch (command) {
                     case 1: getmTaxis(); break;
-                    //case 2: getNStats(); break;
-                    //case 3: getAvgDeliveries(); break;
-                    //case 4: getAvgkm(); break;
+                    case 2: getNStats(); break;
+                    case 3: getAvgDeliveries(); break;
+                    case 4: getAvgkm(); break;
                     case 5: exit = true; break;
                     default:
                         System.out.println("Please enter a valid command.");

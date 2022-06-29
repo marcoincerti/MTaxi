@@ -1,14 +1,13 @@
 package Grpc;
 
 import MQTT.MTaxi;
-import com.mtaxi.grpc.InfoSenderGrpc;
 import com.mtaxi.grpc.InfoSenderGrpc.InfoSenderImplBase;
 import com.mtaxi.grpc.MTaxisService.SenderInfoRequest;
 import com.mtaxi.grpc.MTaxisService.SenderInfoResponse;
 
 import io.grpc.stub.StreamObserver;
 
-public class InfoSenderImpl extends InfoSenderGrpc.InfoSenderImplBase {
+public class InfoSenderImpl extends InfoSenderImplBase {
     private final MTaxi mTaxi;
 
     public InfoSenderImpl(MTaxi mTaxi) {

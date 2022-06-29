@@ -44,7 +44,7 @@ public class RideQueue extends Thread{
     /*
     Re-add an order to the top of the queue
      */
-    public synchronized void retryOrder(Ride r){
+    public synchronized void retryRide(Ride r){
         synchronized (queueLock){
             rideQueue.addFirst(r);
             queueLock.notifyAll();
@@ -131,12 +131,12 @@ public class RideQueue extends Thread{
                 queueLock.notifyAll();
             }
         } catch (InterruptedException e){
-            System.out.println("Interrupted received at order queue");
+            System.out.println("Interrupted received at ride queue");
         }
     }
 
     public String toString(){
-        String ret = "\nOrders left to be assigned:";
+        String ret = "\nRides left to be assigned:";
         synchronized (rideQueue) {
             for (Ride r : rideQueue) {
                 ret += "\n\t- " + r.id;

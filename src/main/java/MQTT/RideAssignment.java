@@ -23,8 +23,8 @@ public class RideAssignment extends Thread{
     /*
     Send order to another Drone
      */
-    public void sendOrder(MTaxi receiver){
-        System.out.println("\nSENDING ORDER:\n\t- order id: " + ride.id + "\n\t- drone id: " + receiver.getId() + "\n");
+    public void sendRide(MTaxi receiver){
+        System.out.println("\nSENDING RIDE:\n\t- ride id: " + ride.id + "\n\t- mTaxi id: " + receiver.getId() + "\n");
 
         final ManagedChannel channel =
                 ManagedChannelBuilder.forTarget(receiver.getIp() + ":" + receiver.getPort())
@@ -51,16 +51,16 @@ public class RideAssignment extends Thread{
         stub.assignRide(req, new StreamObserver<MTaxisService.RideResponse>() {
             @Override
             public void onNext(MTaxisService.RideResponse value) {
-                System.out.println("\nORDER COMPLETED:\n\t- order id: " + ride.id
-                        + "\n\t- drone id: " + receiver.getId() + "\n");
+                System.out.println("\nRIDE COMPLETED:\n\t- ride id: " + ride.id
+                        + "\n\t- mTaxi id: " + receiver.getId() + "\n");
                 mTaxi.statisticsMonitor.addStatistic(value);
             }
 
             @Override
             public void onError(Throwable t) {
                 mTaxi.getMTAxisList().remove(receiver);
-                System.out.println("ORDER ASSIGNMENT ERROR, removing drone " + receiver.getId());
-                queue.retryOrder(ride);
+                System.out.println("RIDE ASSIGNMENT ERROR, removing Mtaxi " + receiver.getId());
+                queue.retryRide(ride);
                 channel.shutdown();
             }
 
@@ -89,10 +89,10 @@ public class RideAssignment extends Thread{
         MTaxi closest = this.mTaxi.getMTAxisList().findClosest(ride);
         if (closest == null) {
             //System.out.println("No drones available");
-            queue.retryOrder(ride);
+            queue.retryRide(ride);
         }else{
             //System.out.println("Closest drone: " + closest.id);
-            sendOrder(closest);
+            sendRide(closest);
         }
         queue.removeThread(this);
     }

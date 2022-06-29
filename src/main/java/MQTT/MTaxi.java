@@ -12,7 +12,7 @@ import java.util.*;
 public class MTaxi implements Comparable<MTaxi>{
 
     /*
-    Drone fields and required locks
+    MTaxi fields and required locks
      */
     protected int id;
     protected String ip;
@@ -60,6 +60,7 @@ public class MTaxi implements Comparable<MTaxi>{
     private PingService pingService;
     private QuitMTaxi quitMTaxi;
     private PrintMTaxiInfo printMTaxiInfo;
+
     protected PollutionSensor pollutionSensor;
     public MTaxi(int id, String ip, int port) {
         this.id = id;
@@ -110,7 +111,7 @@ public class MTaxi implements Comparable<MTaxi>{
     public void run(){
         // make rest request
         if (!restMethods.initialize()){
-            System.out.println("An error occurred initializing mTaxi with these specs " + getInfo());
+            System.out.println("An error occurred initializing drone with these specs " + getInfo());
             return;
         }
 
@@ -123,7 +124,7 @@ public class MTaxi implements Comparable<MTaxi>{
         grpcServer.start();
 
         // send everyone my info
-        mTaxisList.sendMtaxiInfo();
+        mTaxisList.sendMTaxiInfo();
 
 
         // becomeMaster, it is a separate function
@@ -137,8 +138,8 @@ public class MTaxi implements Comparable<MTaxi>{
         printMTaxiInfo = new PrintMTaxiInfo(this);
         printMTaxiInfo.start();
 
-        //pollutionSensor = new PollutionSensor(this);
-        //pollutionSensor.start();
+        pollutionSensor = new PollutionSensor(this);
+        pollutionSensor.start();
     }
 
     /*
@@ -151,12 +152,12 @@ public class MTaxi implements Comparable<MTaxi>{
         System.out.println("\nBECOMING THE NEW MASTER:");
         // request drones infos
         mTaxisList.requestMTaxisInfo();
-        System.out.println("\t- Other mTaxi info requested");
+        System.out.println("\t- Other mTaxis info requested");
         // start the order queue
         if (rideQueue == null) {
             rideQueue = new RideQueue(this);
             rideQueue.start();
-            System.out.println("\t- Order queue started");
+            System.out.println("\t- Rider queue started");
         }
         if (mqttBroker == null) {
             mqttBroker = new MQTTBroker(this, rideQueue);
@@ -187,7 +188,7 @@ public class MTaxi implements Comparable<MTaxi>{
                 try {
                     mqttBroker.disconnect();
                 } catch (NullPointerException e ) {
-                    System.out.println("Monitor orders was not initialized");
+                    System.out.println("Monitor rides was not initialized");
                 }
             }
             /*
@@ -196,6 +197,7 @@ public class MTaxi implements Comparable<MTaxi>{
             while (isParticipant()) {
                 //System.out.println("\t- Election in progress, can't quit now...");
                 synchronized (participantLock) {
+
                     try {
                         participantLock.wait(3000);
                     } catch (InterruptedException e) {
@@ -278,7 +280,7 @@ public class MTaxi implements Comparable<MTaxi>{
     every time a drone enters the system
      */
     public void enterRing(){
-        ArrayList<MTaxi> list = mTaxisList.getmTaxisList();
+        ArrayList<MTaxi> list = mTaxisList.getMTaxiList();
         list.add(this);
         Collections.sort(list);
 
@@ -293,9 +295,9 @@ public class MTaxi implements Comparable<MTaxi>{
             ElectClient c = new ElectClient(this, electionRequest);
             c.start();
         }
-//        else {
-//        System.out.println("Already master");
-//        }
+        //else {
+        //System.out.println("Already master");
+        //}
     }
 
     /*
@@ -314,24 +316,22 @@ public class MTaxi implements Comparable<MTaxi>{
     }
 
     /*
-    Delivery simulation, the Mtaxi sleeps for 5 seconds,
+    Delivery simulation, the Drone sleeps for 5 seconds,
     then it sends the delivery response,
      */
     public MTaxisService.RideResponse deliver(MTaxisService.RideRequest request) {
         setAvailable(false);
-        int[] rideStartPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
-        int[] rideEndPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
-
+        int[] orderStartPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
+        int[] orderEndPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
+        decreaseBattery();
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        double deliveryKm = MTaxisList.distance(getCoordinates(), rideStartPosition) +
-                MTaxisList.distance(rideStartPosition, rideEndPosition);
-
-        decreaseBattery(deliveryKm);
+        double deliveryKm = MTaxisList.distance(getCoordinates(), orderStartPosition) +
+                MTaxisList.distance(orderStartPosition, orderEndPosition);
 
         MTaxisService.RideResponse.Builder response = MTaxisService.RideResponse.newBuilder()
                 .setId(getId())
@@ -340,28 +340,28 @@ public class MTaxi implements Comparable<MTaxi>{
                 )
                 .setNewPosition(
                         MTaxisService.Coordinates.newBuilder()
-                                .setX(rideEndPosition[0])
-                                .setY(rideEndPosition[1])
+                                .setX(orderEndPosition[0])
+                                .setY(orderEndPosition[1])
                                 .build()
                 )
                 .setKm(deliveryKm)
                 .setResidualBattery(getBattery());
 
-//        try {
-//            for (Measurement m : pollutionSensor.getDeliveryPollution()) {
-//                response.addMeasurements(MTaxisService.Measurement.newBuilder()
-//                        .setAvg(m.getValue()).build());
-//            }
-//        } catch (NullPointerException e ) {
-//            response.addMeasurements(MTaxisService.Measurement.newBuilder()
-//                    .setAvg(0).build());
-//        }
+        try {
+            for (Measurement m : pollutionSensor.getDeliveryPollution()) {
+                response.addMeasurements(MTaxisService.Measurement.newBuilder()
+                        .setAvg(m.getValue()).build());
+            }
+        } catch (NullPointerException e ) {
+            response.addMeasurements(MTaxisService.Measurement.newBuilder()
+                    .setAvg(0).build());
+        }
 
-        setCoordinates(rideEndPosition);
+        setCoordinates(orderEndPosition);
         incrementTotKm(deliveryKm);
         incrementTotDeliveries();
 
-        System.out.println("\nDELIVERY COMPLETED: \n\t- New position: [" + rideEndPosition[0] + ", " + rideEndPosition[1] + "]");
+        System.out.println("\nDELIVERY COMPLETED: \n\t- New position: [" + orderEndPosition[0] + ", " + orderEndPosition[1] + "]");
         System.out.println("\t- Residual battery: " + getBattery() + "%\n");
         setAvailable(true);
 
@@ -396,9 +396,9 @@ public class MTaxi implements Comparable<MTaxi>{
         return ret;
     }
 
-    public void decreaseBattery(Double totalKM) {
+    public void decreaseBattery() {
         synchronized (batteryLock){
-            battery -= totalKM;
+            battery -= 15;
         }
     }
 
@@ -529,12 +529,20 @@ public class MTaxi implements Comparable<MTaxi>{
     }
 
     public String toString(){
-        String ret =  "\n******* MTAXI INFO *******\n\n" + getInfo();
+        String ret =  "\n********* MTAXI INFO **********\n\n" + getInfo();
         ret += "\n\t- Battery level: " + getBattery() + "%";
         ret += "\n\t- Total km: " + getTotKm();
         ret += "\n\t- Total deliveries: " + getTotDeliveries();
-        ret += "\n\t- Coordinates: " + Arrays.toString(getCoordinates());
-        return ret + "\n*************************\n";
+
+        /*
+        ret += "\n\nOther known drones: [\n";
+
+        for (Drone d : getDronesList().getDronesList())
+            ret += "\n- " + d.getInfo() + ", \n";
+
+        ret += "\n]";
+        */
+        return ret + "\n****************************\n";
     }
 
     public MTaxi getSuccessor(){
@@ -544,7 +552,7 @@ public class MTaxi implements Comparable<MTaxi>{
     public static void main(String[] args) {
 
         /*
-        Scanner sc = new Scanner(System.in);
+        Scanner sc=new Scanner(System.in);
 
         System.out.println("Insert drone ID and port");
         Drone d = new Drone(sc.nextInt(), "localhost", sc.nextInt());

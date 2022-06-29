@@ -61,22 +61,22 @@ public class StatisticsMonitor extends Thread{
         for ( Measurement m : pollutionList )
             totPollution += m.getValue();
 
-        int deliveringDrones = deliveries.size();
+        int deliveringMTaxis = deliveries.size();
 
 
         Statistic ret;
 
-        if (deliveringDrones == 0) {
+        if (deliveringMTaxis == 0) {
             ret = new Statistic(
                     0, 0, 0, 0,
                     new Timestamp(System.currentTimeMillis()).getTime()
             );
         } else {
             ret = new Statistic(
-                    (double) totDeliveries / (double) deliveringDrones,
-                    totKm / deliveringDrones,
+                    (double) totDeliveries / (double) deliveringMTaxis,
+                    totKm / deliveringMTaxis,
                     totPollution / pollutionList.size(),
-                    (double) totBatteries / (double) deliveringDrones,
+                    (double) totBatteries / (double) deliveringMTaxis,
                     new Timestamp(System.currentTimeMillis()).getTime()
             );
         }

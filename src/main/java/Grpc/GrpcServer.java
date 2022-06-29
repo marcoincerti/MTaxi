@@ -10,9 +10,7 @@ public class GrpcServer extends Thread{
     private MTaxi mTaxi;
     private Server server;
 
-    public GrpcServer(MTaxi mTaxi) {
-        this.mTaxi = mTaxi;
-    }
+    public GrpcServer(MTaxi mTaxi) { this.mTaxi = mTaxi; }
 
     public void run(){
         server = ServerBuilder.forPort(mTaxi.getPort())
