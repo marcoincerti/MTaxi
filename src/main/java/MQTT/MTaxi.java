@@ -9,7 +9,7 @@ import com.mtaxi.grpc.MTaxisService;
 import java.sql.Timestamp;
 import java.util.*;
 
-public class MTaxi implements Comparable<MTaxi>{
+public class MTaxi implements Comparable<MTaxi> {
 
     /*
     MTaxi fields and required locks
@@ -62,6 +62,7 @@ public class MTaxi implements Comparable<MTaxi>{
     private PrintMTaxiInfo printMTaxiInfo;
 
     protected PollutionSensor pollutionSensor;
+
     public MTaxi(int id, String ip, int port) {
         this.id = id;
         this.ip = ip;
@@ -105,12 +106,12 @@ public class MTaxi implements Comparable<MTaxi>{
     }
 
     /*
-    Start function, the drone initialize and send others
+    Start function, the mtaxi initialize and send others
     it's info, if required it becomes master
      */
-    public void run(){
+    public void run() {
         // make rest request
-        if (!restMethods.initialize()){
+        if (!restMethods.initialize()) {
             System.out.println("An error occurred initializing drone with these specs " + getInfo());
             return;
         }
@@ -118,6 +119,10 @@ public class MTaxi implements Comparable<MTaxi>{
         // start quit service
         quitMTaxi = new QuitMTaxi(this);
         quitMTaxi.start();
+
+        // start recharge service
+        //rechargeMTaxi= new RechargeMTaxi(this);
+        //rechargeMTaxi.start();
 
         // start grpc server to respond
         grpcServer = new GrpcServer(this);
@@ -146,7 +151,7 @@ public class MTaxi implements Comparable<MTaxi>{
     Calling this function a Drone becomes master, so it
     starts to monitor orders and manage the queue
      */
-    public synchronized void becomeMaster(){
+    public synchronized void becomeMaster() {
         setParticipant(false);
         setMaster(true);
         System.out.println("\nBECOMING THE NEW MASTER:");
@@ -165,9 +170,96 @@ public class MTaxi implements Comparable<MTaxi>{
             mqttBroker.start();
             System.out.println("\t- MQTT client started\n\n");
         }
-        if(statisticsMonitor == null) {
+        if (statisticsMonitor == null) {
             statisticsMonitor = new StatisticsMonitor(this);
             statisticsMonitor.start();
+        }
+    }
+
+    public void checkStatus() {
+        setIsQuitting(true);
+        System.out.println("\n\nCOMMAND RECEIVED:");
+
+            /*
+            Disconnect mqtt client to not receive new orders
+             */
+        if (isMaster()) {
+            try {
+                mqttBroker.disconnect();
+            } catch (NullPointerException e) {
+                System.out.println("Monitor rides was not initialized");
+            }
+        }
+            /*
+            Wait if there is an election in progress
+             */
+        while (isParticipant()) {
+            //System.out.println("\t- Election in progress, can't quit now...");
+            synchronized (participantLock) {
+
+                try {
+                    participantLock.wait(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+            /*
+            A delivery is in progress, need to wait
+             */
+        while (!isAvailable()) {
+            System.out.println("\t- Delivery in progress, can't quit now...");
+            synchronized (isAvailableLock) {
+                try {
+                    isAvailableLock.wait(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        if (isMaster()) {
+            // this make sure to run orderqueue until it's empty
+            try {
+                rideQueue.setExit(true);
+                /*
+                if orders are still in the queue, notifyAll, as
+                there might be a produce that's stuck.
+                Then wait on the queue, there will be a notify when all the
+                current deliveries are finished
+                 */
+                if (!rideQueue.isEmpty()) {
+                    System.out.println(rideQueue);
+                    try {
+                        synchronized (rideQueue.queueLock) {
+                            rideQueue.queueLock.notifyAll();
+                            rideQueue.queueLock.wait();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (NullPointerException e) {
+                System.out.println("Ride queue was not initialized");
+            }
+            System.out.println("\t- All orders have been assigned\n" +
+                    "\t- Sending statistics to the REST API...");
+            try {
+                synchronized (statisticsMonitor.statisticLock) {
+                    statisticsMonitor.statisticLock.notify();
+                }
+                synchronized (statisticsMonitor.statisticLock) {
+                    try {
+                        statisticsMonitor.statisticLock.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (NullPointerException e) {
+                System.out.println("Statistic monitor was not initialized");
+            }
+            System.out.println("\t- STATS SENT");
         }
     }
 
@@ -177,91 +269,8 @@ public class MTaxi implements Comparable<MTaxi>{
     master it also empty the order queue and send the stats to the REST API.
      */
     public void stop() {
-        if(!isQuitting()) {
-            setIsQuitting(true);
-            System.out.println("\n\nQUIT RECEIVED:");
-
-            /*
-            Disconnect mqtt client to not receive new orders
-             */
-            if (isMaster()) {
-                try {
-                    mqttBroker.disconnect();
-                } catch (NullPointerException e ) {
-                    System.out.println("Monitor rides was not initialized");
-                }
-            }
-            /*
-            Wait if there is an election in progress
-             */
-            while (isParticipant()) {
-                //System.out.println("\t- Election in progress, can't quit now...");
-                synchronized (participantLock) {
-
-                    try {
-                        participantLock.wait(3000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            /*
-            A delivery is in progress, need to wait
-             */
-            while (!isAvailable()) {
-                System.out.println("\t- Delivery in progress, can't quit now...");
-                synchronized (isAvailableLock) {
-                    try {
-                        isAvailableLock.wait(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            if (isMaster()) {
-                // this make sure to run orderqueue until it's empty
-                try {
-                    rideQueue.setExit(true);
-                /*
-                if orders are still in the queue, notifyAll, as
-                there might be a produce that's stuck.
-                Then wait on the queue, there will be a notify when all the
-                current deliveries are finished
-                 */
-                    if (!rideQueue.isEmpty()) {
-                        System.out.println(rideQueue);
-                        try {
-                            synchronized (rideQueue.queueLock) {
-                                rideQueue.queueLock.notifyAll();
-                                rideQueue.queueLock.wait();
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } catch (NullPointerException e ){
-                    System.out.println("Order queue was not initialized");
-                }
-                System.out.println("\t- All orders have been assigned\n" +
-                        "\t- Sending statistics to the REST API...");
-                try {
-                    synchronized (statisticsMonitor.statisticLock) {
-                        statisticsMonitor.statisticLock.notify();
-                    }
-                    synchronized (statisticsMonitor.statisticLock) {
-                        try {
-                            statisticsMonitor.statisticLock.wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } catch (NullPointerException e ){
-                    System.out.println("Statistic monitor was not initialized");
-                }
-                System.out.println("\t- STATS SENT");
-            }
+        if (!isQuitting()) {
+            checkStatus();
 
             grpcServer.interrupt();
             System.out.println("\t- GRPC server interrupted");
@@ -273,23 +282,42 @@ public class MTaxi implements Comparable<MTaxi>{
         }
     }
 
+    public void recharge() throws InterruptedException {
+        if (!isQuitting()) {
+            checkStatus();
+
+            setCoordinates(new int[]{0, 0});
+            try {
+                System.out.println("RECHARGING");
+                Thread.sleep(5000);
+                System.out.println("FINISH RECHARGING");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            battery = 100;
+            setIsQuitting(false);
+        } else {
+            System.out.println("QUIT IS ALREADY IN PROGRESS");
+        }
+    }
+
     /*
     Enter the ring overlay network,
     The function computes the predecessor and successor,
     to simplify implementation it's called
     every time a drone enters the system
      */
-    public void enterRing(){
+    public void enterRing() {
         ArrayList<MTaxi> list = mTaxisList.getMTaxiList();
         list.add(this);
         Collections.sort(list);
 
         int i = list.indexOf(this);
 
-        successor = (i == list.size()-1)? list.get(0) : list.get(i+1);
+        successor = (i == list.size() - 1) ? list.get(0) : list.get(i + 1);
     }
 
-    public synchronized void forwardElection(MTaxisService.ElectionRequest electionRequest){
+    public synchronized void forwardElection(MTaxisService.ElectionRequest electionRequest) {
         if (!isMaster()) {
             //System.out.println("Forwarding election");
             ElectClient c = new ElectClient(this, electionRequest);
@@ -304,7 +332,7 @@ public class MTaxi implements Comparable<MTaxi>{
     Start the election in case of a missed ping response
     by the master
      */
-    public synchronized void startElection(){
+    public synchronized void startElection() {
         if (!isParticipant()) {
             setParticipant(true);
             forwardElection(MTaxisService.ElectionRequest.newBuilder()
@@ -315,14 +343,15 @@ public class MTaxi implements Comparable<MTaxi>{
         }
     }
 
+
     /*
     Delivery simulation, the Drone sleeps for 5 seconds,
     then it sends the delivery response,
      */
     public MTaxisService.RideResponse deliver(MTaxisService.RideRequest request) {
         setAvailable(false);
-        int[] orderStartPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
-        int[] orderEndPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
+        int[] rideStartPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
+        int[] rideEndPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
         decreaseBattery();
         try {
             Thread.sleep(5000);
@@ -330,8 +359,8 @@ public class MTaxi implements Comparable<MTaxi>{
             e.printStackTrace();
         }
 
-        double deliveryKm = MTaxisList.distance(getCoordinates(), orderStartPosition) +
-                MTaxisList.distance(orderStartPosition, orderEndPosition);
+        double deliveryKm = MTaxisList.distance(getCoordinates(), rideStartPosition) +
+                MTaxisList.distance(rideStartPosition, rideEndPosition);
 
         MTaxisService.RideResponse.Builder response = MTaxisService.RideResponse.newBuilder()
                 .setId(getId())
@@ -340,8 +369,8 @@ public class MTaxi implements Comparable<MTaxi>{
                 )
                 .setNewPosition(
                         MTaxisService.Coordinates.newBuilder()
-                                .setX(orderEndPosition[0])
-                                .setY(orderEndPosition[1])
+                                .setX(rideEndPosition[0])
+                                .setY(rideEndPosition[1])
                                 .build()
                 )
                 .setKm(deliveryKm)
@@ -352,16 +381,16 @@ public class MTaxi implements Comparable<MTaxi>{
                 response.addMeasurements(MTaxisService.Measurement.newBuilder()
                         .setAvg(m.getValue()).build());
             }
-        } catch (NullPointerException e ) {
+        } catch (NullPointerException e) {
             response.addMeasurements(MTaxisService.Measurement.newBuilder()
                     .setAvg(0).build());
         }
 
-        setCoordinates(orderEndPosition);
+        setCoordinates(rideEndPosition);
         incrementTotKm(deliveryKm);
         incrementTotDeliveries();
 
-        System.out.println("\nDELIVERY COMPLETED: \n\t- New position: [" + orderEndPosition[0] + ", " + orderEndPosition[1] + "]");
+        System.out.println("\nDELIVERY COMPLETED: \n\t- New position: [" + rideEndPosition[0] + ", " + rideEndPosition[1] + "]");
         System.out.println("\t- Residual battery: " + getBattery() + "%\n");
         setAvailable(true);
 
@@ -373,7 +402,7 @@ public class MTaxi implements Comparable<MTaxi>{
      */
     @Override
     public int compareTo(MTaxi o) {
-        return this.getId() - o.getId() ;
+        return this.getId() - o.getId();
     }
 
     public int getId() {
@@ -390,19 +419,19 @@ public class MTaxi implements Comparable<MTaxi>{
      */
     public int getBattery() {
         int ret;
-        synchronized (batteryLock){
+        synchronized (batteryLock) {
             ret = battery;
         }
         return ret;
     }
 
     public void decreaseBattery() {
-        synchronized (batteryLock){
+        synchronized (batteryLock) {
             battery -= 15;
         }
     }
 
-    public int[] getCoordinates(){
+    public int[] getCoordinates() {
         int[] ret;
         synchronized (coordinatesLock) {
             ret = coordinates;
@@ -410,7 +439,7 @@ public class MTaxi implements Comparable<MTaxi>{
         return ret;
     }
 
-    public void setCoordinates(int[] cord){
+    public void setCoordinates(int[] cord) {
         synchronized (coordinatesLock) {
             coordinates = cord;
         }
@@ -434,14 +463,14 @@ public class MTaxi implements Comparable<MTaxi>{
 
     public boolean isAvailable() {
         boolean ret;
-        synchronized (isAvailableLock){
+        synchronized (isAvailableLock) {
             ret = (boolean) isAvailable;
         }
         return ret;
     }
 
     public void setAvailable(boolean b) {
-        synchronized (isAvailableLock){
+        synchronized (isAvailableLock) {
             isAvailable = b;
         }
     }
@@ -474,7 +503,9 @@ public class MTaxi implements Comparable<MTaxi>{
         }
     }
 
-    public MTaxisList getMTAxisList() { return mTaxisList; }
+    public MTaxisList getMTAxisList() {
+        return mTaxisList;
+    }
 
     public int getPort() {
         return port;
@@ -494,13 +525,13 @@ public class MTaxi implements Comparable<MTaxi>{
         return ret;
     }
 
-    public void incrementTotDeliveries(){
+    public void incrementTotDeliveries() {
         synchronized (totDeliveriesLock) {
             totDeliveries += 1;
         }
     }
 
-    public int getTotDeliveries(){
+    public int getTotDeliveries() {
         int ret;
         synchronized (totDeliveriesLock) {
             ret = totDeliveries;
@@ -523,56 +554,41 @@ public class MTaxi implements Comparable<MTaxi>{
     }
 
 
-    public String getInfo(){
-        return (isMaster()? "MASTER" : "WORKER") + "\n\t- Id: " + getId() +
+    public String getInfo() {
+        return (isMaster() ? "MASTER" : "WORKER") + "\n\t- Id: " + getId() +
                 "\n\t- Address: " + getIp() + ":" + getPort();
     }
 
-    public int getDistrict(){
-        if (coordinates[0] <= 4){
-            if (coordinates[1] <= 4){
+    public int getDistrict() {
+        if (coordinates[0] <= 4) {
+            if (coordinates[1] <= 4) {
                 return 1;
-            }else{
+            } else {
                 return 4;
             }
-        }else{
-            if (coordinates[1] <= 4){
+        } else {
+            if (coordinates[1] <= 4) {
                 return 2;
-            }else{
+            } else {
                 return 3;
             }
         }
     }
 
-    public String toString(){
-        String ret =  "\n********* MTAXI INFO **********\n\n" + getInfo();
+    public String toString() {
+        String ret = "\n********* MTAXI INFO **********\n\n" + getInfo();
         ret += "\n\t- Battery level: " + getBattery() + "%";
         ret += "\n\t- Total km: " + getTotKm();
         ret += "\n\t- Total deliveries: " + getTotDeliveries();
 
-        /*
-        ret += "\n\nOther known drones: [\n";
-
-        for (Drone d : getDronesList().getDronesList())
-            ret += "\n- " + d.getInfo() + ", \n";
-
-        ret += "\n]";
-        */
         return ret + "\n****************************\n";
     }
 
-    public MTaxi getSuccessor(){
+    public MTaxi getSuccessor() {
         return successor;
     }
 
     public static void main(String[] args) {
-
-        /*
-        Scanner sc=new Scanner(System.in);
-
-        System.out.println("Insert drone ID and port");
-        Drone d = new Drone(sc.nextInt(), "localhost", sc.nextInt());
-        */
 
         Random rd = new Random();
         MTaxi t = new MTaxi(rd.nextInt(1000), "localhost", 10000 + rd.nextInt(30000));

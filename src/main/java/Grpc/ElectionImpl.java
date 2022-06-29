@@ -32,7 +32,7 @@ public class ElectionImpl extends ElectionImplBase {
             if (mTaxi.isParticipant() && request.getBattery() < mTaxi.getBattery()){
                 System.out.println("MULTIPLE ELECTIONS: ignoring the message " +
                         "by " + request.getId());
-            } else {;
+            } else {
                 mTaxi.enterRing();
                 mTaxi.forwardElection(buildResponse(request));
                 // forward election

@@ -88,7 +88,7 @@ public class RideAssignment extends Thread{
         //System.out.println("Order assignment");
         MTaxi closest = this.mTaxi.getMTAxisList().findClosest(ride);
         if (closest == null) {
-            System.out.println("No mtaxis available in the district");
+            //System.out.println("No mtaxis available in the district");
             queue.retryRide(ride);
         }else{
             //System.out.println("Closest drone: " + closest.id);

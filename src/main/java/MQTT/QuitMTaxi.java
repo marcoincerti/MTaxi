@@ -25,7 +25,16 @@ public class QuitMTaxi extends Thread{
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } while(!message.equals("quit"));
-        mTaxi.stop();
+        } while(!message.equals("quit") && !message.equals("recharge"));
+
+        if(message.equals("quit")) {
+            mTaxi.stop();
+        }else{
+            try {
+                mTaxi.recharge();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
