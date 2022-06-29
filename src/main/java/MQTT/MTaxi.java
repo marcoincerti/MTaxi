@@ -528,6 +528,22 @@ public class MTaxi implements Comparable<MTaxi>{
                 "\n\t- Address: " + getIp() + ":" + getPort();
     }
 
+    public int getDistrict(){
+        if (coordinates[0] <= 4){
+            if (coordinates[1] <= 4){
+                return 1;
+            }else{
+                return 4;
+            }
+        }else{
+            if (coordinates[1] <= 4){
+                return 2;
+            }else{
+                return 3;
+            }
+        }
+    }
+
     public String toString(){
         String ret =  "\n********* MTAXI INFO **********\n\n" + getInfo();
         ret += "\n\t- Battery level: " + getBattery() + "%";

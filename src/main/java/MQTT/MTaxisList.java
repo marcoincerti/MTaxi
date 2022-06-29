@@ -146,7 +146,7 @@ public class MTaxisList {
     }
 
     /*
-    Find the closest Drone,
+    Find the closest MTaxi,
     synchronized as multiple concurrent deliveries are possible
      */
     public synchronized MTaxi findClosest(Ride r) {
@@ -159,15 +159,17 @@ public class MTaxisList {
         list.add(mTaxi);
 
         for ( MTaxi t : list ) {
-            if(t.getX() == -1){
+            if (t.getX() == -1) {
                 return null;
             }
             Double currentDistance = distance(r.startCoordinates, t.getCoordinates());
-            if ((t.isAvailable() && t.getBattery() > 30) && (closest == null || currentDistance.compareTo(dist) < 0 ||
-                    (currentDistance.compareTo(dist) == 0 && t.getBattery() > maxBattery))) {
-                dist = currentDistance;
-                maxBattery = t.getBattery();
-                closest = t;
+            if (t.getDistrict() == r.getDistrict()) {
+                if ((t.isAvailable() && t.getBattery() > 30) && (closest == null || currentDistance.compareTo(dist) < 0 ||
+                        (currentDistance.compareTo(dist) == 0 && t.getBattery() > maxBattery))) {
+                    dist = currentDistance;
+                    maxBattery = t.getBattery();
+                    closest = t;
+                }
             }
         }
         if (closest != null) {

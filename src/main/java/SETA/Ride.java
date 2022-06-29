@@ -31,6 +31,22 @@ public class Ride {
         return ride.toString();
     }
 
+    public int getDistrict(){
+        if (startCoordinates[0] <= 4){
+            if (startCoordinates[1] <= 4){
+                    return 1;
+            }else{
+                return 4;
+            }
+        }else{
+            if (startCoordinates[1] <= 4){
+                return 2;
+            }else{
+                return 3;
+            }
+        }
+    }
+
     public static Ride unpackJson(String json) {
 
         JSONObject order = null;

@@ -46,7 +46,7 @@ public class RideQueue extends Thread{
      */
     public synchronized void retryRide(Ride r){
         synchronized (queueLock){
-            rideQueue.addFirst(r);
+            rideQueue.addLast(r);
             queueLock.notifyAll();
         }
     }
