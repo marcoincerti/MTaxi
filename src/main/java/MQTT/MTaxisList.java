@@ -165,7 +165,7 @@ public class MTaxisList {
                 return null;
             }
             Double currentDistance = distance(r.startCoordinates, t.getCoordinates());
-            if (t.getDistrict() == r.getDistrict()) {
+            //if (t.getDistrict() == r.getDistrict()) {
                 if ((t.isAvailable() && t.getBattery() > 30) && (closest == null || currentDistance.compareTo(dist) < 0 ||
                         (currentDistance.compareTo(dist) == 0 && t.getBattery() > maxBattery) || (currentDistance.compareTo(dist) == 0 && t.getBattery() == maxBattery && t.id > idMax))) {
                     dist = currentDistance;
@@ -173,12 +173,12 @@ public class MTaxisList {
                     idMax = t.id;
                     closest = t;
                 }
-            }
+            //}
         }
         if (closest != null) {
             closest.setAvailable(false);
             if (closest != this.mTaxi)
-                closest.decreaseBattery();
+                closest.decreaseBattery(dist);
         }
 
         return closest;

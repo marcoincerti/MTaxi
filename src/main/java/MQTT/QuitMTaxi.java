@@ -30,11 +30,7 @@ public class QuitMTaxi extends Thread{
         if(message.equals("quit")) {
             mTaxi.stop();
         }else{
-            try {
                 mTaxi.recharge();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 }

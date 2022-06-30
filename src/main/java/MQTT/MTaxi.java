@@ -282,19 +282,46 @@ public class MTaxi implements Comparable<MTaxi> {
         }
     }
 
-    public void recharge() throws InterruptedException {
+    public void recharge() {
         if (!isQuitting()) {
-            checkStatus();
+            /*
+            Wait if there is an election in progress
+             */
+            while (isParticipant()) {
+                //System.out.println("\t- Election in progress, can't quit now...");
+                synchronized (participantLock) {
+
+                    try {
+                        participantLock.wait(3000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            /*
+            A delivery is in progress, need to wait
+             */
+            while (!isAvailable()) {
+                System.out.println("\t- Delivery in progress, can't recharge now...");
+                synchronized (isAvailableLock) {
+                    try {
+                        isAvailableLock.wait(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
 
             setCoordinates(new int[]{0, 0});
             try {
                 System.out.println("RECHARGING");
                 Thread.sleep(5000);
+                setBattery(100);
                 System.out.println("FINISH RECHARGING");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            battery = 100;
             setIsQuitting(false);
         } else {
             System.out.println("QUIT IS ALREADY IN PROGRESS");
@@ -352,7 +379,6 @@ public class MTaxi implements Comparable<MTaxi> {
         setAvailable(false);
         int[] rideStartPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
         int[] rideEndPosition = new int[]{request.getEnd().getX(), request.getEnd().getY()};
-        decreaseBattery();
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
@@ -361,6 +387,8 @@ public class MTaxi implements Comparable<MTaxi> {
 
         double deliveryKm = MTaxisList.distance(getCoordinates(), rideStartPosition) +
                 MTaxisList.distance(rideStartPosition, rideEndPosition);
+
+        decreaseBattery(deliveryKm);
 
         MTaxisService.RideResponse.Builder response = MTaxisService.RideResponse.newBuilder()
                 .setId(getId())
@@ -425,9 +453,14 @@ public class MTaxi implements Comparable<MTaxi> {
         return ret;
     }
 
-    public void decreaseBattery() {
+    public void decreaseBattery(Double km) {
         synchronized (batteryLock) {
-            battery -= 15;
+            battery -= km;
+        }
+    }
+    public void setBattery(int bat) {
+        synchronized (batteryLock) {
+            battery = bat;
         }
     }
 

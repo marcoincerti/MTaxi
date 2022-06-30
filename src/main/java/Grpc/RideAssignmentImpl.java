@@ -23,7 +23,7 @@ public class RideAssignmentImpl extends RideAssignmentImplBase {
             responseObserver.onNext(response);
             if (response.getResidualBattery() < 30) {
                 System.out.println("\nLOW BATTERY WARNING: going to the charge!");
-                mTaxi.stop();
+                mTaxi.recharge();
             }
         }
         responseObserver.onCompleted();
