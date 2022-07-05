@@ -48,7 +48,7 @@ public class MQTTBroker extends Thread{
 
                     Ride r = Ride.unpackJson(receivedMessage);
                     if (r.id == -1){
-                        System.out.println("ERROR while unpacking order json");
+                        System.out.println("ERROR while unpacking ride json");
                     } else {
                         queue.produce(r);
                     }

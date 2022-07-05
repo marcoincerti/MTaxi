@@ -42,7 +42,7 @@ public class RideQueue extends Thread{
     }
 
     /*
-    Re-add an order to the top of the queue
+    Re-add an ride to the top of the queue
      */
     public synchronized void retryRide(Ride r){
         synchronized (queueLock){
@@ -52,7 +52,7 @@ public class RideQueue extends Thread{
     }
 
     /*
-    Add a new order to the queue, this will notify the consumer
+    Add a new ride to the queue, this will notify the consumer
      */
     public void produce(Ride r){
         synchronized (queueLock){

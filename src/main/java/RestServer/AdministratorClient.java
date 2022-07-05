@@ -20,7 +20,7 @@ public class AdministratorClient {
     static String commandList = "\nAvailable methods:\n\n" +
             "\t(1) Get mTaxis in the smartCity\n" +
             "\t(2) Get last N stats from the smartCity\n" +
-            "\t(3) Get the average number of deliveries between two timestamps\n" +
+            "\t(3) Get the average number of rides accomplished between two timestamps\n" +
             "\t(4) Get the average km between two timestamps\n" +
             "\t(5) Quit\n\n" +
             "Insert a command between 1 and 5: ";
@@ -56,11 +56,11 @@ public class AdministratorClient {
             for (int i = 0; i < r.length(); i++) {
                 JSONObject d = r.getJSONObject(i);
                 System.out.println((i+1)+". statistic: "
-                        + "\n\t- avgDelivery: "+ d.getDouble("avgDelivery")
-                        + "\n\t- avgKm: " + d.getDouble("avgKm")
-                        + "\n\t- avgPollution: " + d.getDouble("avgPollution")
-                        + "\n\t- avgBattery: " + d.getDouble("avgBattery")
-                        + "\n\t- timestamp: " + d.getLong("timestamp")
+                        + "\n\t- Travelled kilometres: " + d.getDouble("avgKm")
+                        + "\n\t- Pollution level: " + d.getDouble("avgPollution")
+                        + "\n\t- Battery level: " + d.getDouble("avgBattery")
+                        + "\n\t- Number of accomplished rides: " + d.getDouble("avgDelivery")
+                        + "\n\t- Timestamp: " + d.getLong("timestamp")
                         + '\n');
             }
         } catch (JSONException e) {
@@ -78,7 +78,7 @@ public class AdministratorClient {
         ClientResponse response = webResource.type("application/json")
                 .get(ClientResponse.class);
 
-        System.out.println("Average number of deliveries " +
+        System.out.println("Average number of rides accomplished " +
                 "between " + t1 + " and " + t2 + ": " +
                 response.getEntity(String.class));
     }

@@ -23,8 +23,8 @@ public class GetInfoClient extends Thread {
     }
 
     public void start() {
-        // build channel pointing receiver drone
-        //System.out.println("Creating stub " + receiverDrone.getIp() + ":" + receiverDrone.getPort());
+        // build channel pointing receiver mtaxi
+        //System.out.println("Creating stub " + receiverMTaxi.getIp() + ":" + receiverMTaxi.getPort());
         final ManagedChannel channel =
                 ManagedChannelBuilder.forTarget(receiverMTaxi.getIp() + ":" + receiverMTaxi.getPort())
                         .usePlaintext().build();
@@ -36,6 +36,7 @@ public class GetInfoClient extends Thread {
                 .setId(senderMTaxi.getId()).build();
 
         stub.getInfo(req, new StreamObserver<InfoResponse>() {
+            //man mano che gli arrivano le risposte aggiorna i taxi nella sua lista
             @Override
             public void onNext(InfoResponse value) {
                 senderMTaxi.getMTAxisList().updateMTaxi(value, listIndex);

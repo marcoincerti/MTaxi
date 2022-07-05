@@ -23,12 +23,12 @@ public class ElectionImpl extends ElectionImplBase {
         System.out.println("\t- elected: " + request.getElected());
 
         boolean master = false;
-        // if this drone is being elected
+        // if this mtaxi is being elected
         if (request.getElected() && request.getId() == mTaxi.getId()){
             System.out.println("\nELECTION FINISHED: I'm the new master");
             master  = true;
         } else {
-            // if the requesting drone has less battery and I am participant I ignore the message
+            // if the requesting mtaxi has less battery and I am participant I ignore the message
             if (mTaxi.isParticipant() && request.getBattery() < mTaxi.getBattery()){
                 System.out.println("MULTIPLE ELECTIONS: ignoring the message " +
                         "by " + request.getId());
@@ -65,7 +65,7 @@ public class ElectionImpl extends ElectionImplBase {
             elected = true;
         } else {
             // if the requester has higher battery or equal battery and higher id,
-            // he wins against this drone
+            // he wins against this mtaxi
             if ((request.getBattery() > mTaxi.getBattery()) ||
                     (request.getBattery() == mTaxi.getBattery()
                             && request.getId() > mTaxi.getId())){

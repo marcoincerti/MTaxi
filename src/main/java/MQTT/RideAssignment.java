@@ -21,7 +21,7 @@ public class RideAssignment extends Thread{
     }
 
     /*
-    Send order to another Drone
+    Send order to another mTaxi
      */
     public void sendRide(MTaxi receiver){
         System.out.println("\nSENDING RIDE:\n\t- ride id: " + ride.id + "\n\t- mTaxi id: " + receiver.getId() + "\n");
@@ -66,7 +66,7 @@ public class RideAssignment extends Thread{
 
             @Override
             public void onCompleted() {
-                //System.out.println("Order assignment completed by drone " + receiver.id);
+                //System.out.println("ride assignment completed by mTaxi " + receiver.id);
                 receiver.setAvailable(true);
                 channel.shutdown();
             }
@@ -81,17 +81,17 @@ public class RideAssignment extends Thread{
     }
 
     /*
-    Try to find an available drone, if not available read
-    the order to the queue
+    Try to find an available mTaxi, if not available read
+    the ride to the queue
      */
     public void run() {
-        //System.out.println("Order assignment");
+        //System.out.println("Ride assignment");
         MTaxi closest = this.mTaxi.getMTAxisList().findClosest(ride);
         if (closest == null) {
             //System.out.println("No mtaxis available in the district");
             queue.retryRide(ride);
         }else{
-            //System.out.println("Closest drone: " + closest.id);
+            //System.out.println("Closest mTaxi: " + closest.id);
             sendRide(closest);
         }
         queue.removeThread(this);

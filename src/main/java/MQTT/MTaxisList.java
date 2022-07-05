@@ -17,10 +17,10 @@ public class MTaxisList {
     }
 
     /*
-    Create a thread for each drone and start requesting infos,
-    it's done when a Drone becomes Master
-    after receiving the response each thread proceeds to star the updateDrone
-    procedure, to update the drone information in the droneslist
+    Create a thread for each mTaxi and start requesting infos,
+    it's done when a mTaxi becomes Master
+    after receiving the response each thread proceeds to star the updateMtaxi
+    procedure, to update the mTaxi information in the mTaxisList
      */
     public void requestMTaxisInfo() {
         // list of threads to then stop them
@@ -44,10 +44,10 @@ public class MTaxisList {
     }
 
     /*
-    Create a thread for each drone in the list
+    Create a thread for each mTaxi in the list
     and start sending infos
     after receiving the response each thread proceeds to star the updateMaster
-    to find out who's the master drone, it will come in handy in case
+    to find out who's the master mTaxi, it will come in handy in case
     the master fails
      */
     public void sendMTaxiInfo() {
@@ -72,9 +72,9 @@ public class MTaxisList {
     }
 
     /*
-    Add a new Drone to the list
+    Add a new mTaxi to the list
     If I am not the master, I set the coordinates to -1, -1, so
-    during the order assignment I can stop
+    during the ride assignment I can stop
      */
     public synchronized void addNewMTaxi(MTaxisService.SenderInfoRequest value) {
         mTaxisList.add(new MTaxi(
@@ -91,7 +91,7 @@ public class MTaxisList {
     }
 
     /*
-    Remove a drone from the list
+    Remove a mTaxi from the list
     called when master get a response error
      */
     public synchronized void remove(MTaxi t) {
@@ -100,10 +100,10 @@ public class MTaxisList {
 
 
     /*
-    Update drone info after a master request
+    Update mTaxi info after a master request
      */
     public void updateMTaxi(MTaxisService.InfoResponse value, int listIndex) {
-        // concurrent access to the drone list, need sync
+        // concurrent access to the mTaxi list, need sync
         ArrayList<MTaxi> copy = getMTaxiList();
         MTaxi t = copy.get(listIndex);
         t.coordinates[0] = value.getPosition().getX();
@@ -137,7 +137,7 @@ public class MTaxisList {
     }
 
     /*
-    Distance function to find closest drone
+    Distance function to find closest mTaxi
      */
     static Double distance(int[] v1, int[] v2) {
         return Math.sqrt(
@@ -165,7 +165,7 @@ public class MTaxisList {
                 return null;
             }
             Double currentDistance = distance(r.startCoordinates, t.getCoordinates());
-            //if (t.getDistrict() == r.getDistrict()) {
+            if (t.getDistrict() == r.getDistrict()) {
                 if ((t.isAvailable() && t.getBattery() > 30) && (closest == null || currentDistance.compareTo(dist) < 0 ||
                         (currentDistance.compareTo(dist) == 0 && t.getBattery() > maxBattery) || (currentDistance.compareTo(dist) == 0 && t.getBattery() == maxBattery && t.id > idMax))) {
                     dist = currentDistance;
@@ -173,7 +173,7 @@ public class MTaxisList {
                     idMax = t.id;
                     closest = t;
                 }
-            //}
+            }
         }
         if (closest != null) {
             closest.setAvailable(false);

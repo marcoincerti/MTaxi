@@ -112,7 +112,7 @@ public class MTaxi implements Comparable<MTaxi> {
     public void run() {
         // make rest request
         if (!restMethods.initialize()) {
-            System.out.println("An error occurred initializing drone with these specs " + getInfo());
+            System.out.println("An error occurred initializing mtaxi with these specs " + getInfo());
             return;
         }
 
@@ -120,9 +120,6 @@ public class MTaxi implements Comparable<MTaxi> {
         quitMTaxi = new QuitMTaxi(this);
         quitMTaxi.start();
 
-        // start recharge service
-        //rechargeMTaxi= new RechargeMTaxi(this);
-        //rechargeMTaxi.start();
 
         // start grpc server to respond
         grpcServer = new GrpcServer(this);
@@ -148,17 +145,17 @@ public class MTaxi implements Comparable<MTaxi> {
     }
 
     /*
-    Calling this function a Drone becomes master, so it
-    starts to monitor orders and manage the queue
+    Calling this function a Mtaxi becomes master, so it
+    starts to monitor rides and manage the queue
      */
     public synchronized void becomeMaster() {
         setParticipant(false);
         setMaster(true);
         System.out.println("\nBECOMING THE NEW MASTER:");
-        // request drones infos
+        // request mtaxi infos
         mTaxisList.requestMTaxisInfo();
         System.out.println("\t- Other mTaxis info requested");
-        // start the order queue
+        // start the rides queue
         if (rideQueue == null) {
             rideQueue = new RideQueue(this);
             rideQueue.start();
@@ -166,7 +163,7 @@ public class MTaxi implements Comparable<MTaxi> {
         }
         if (mqttBroker == null) {
             mqttBroker = new MQTTBroker(this, rideQueue);
-            // start the order monitor mqtt client
+            // start the ride monitor mqtt client
             mqttBroker.start();
             System.out.println("\t- MQTT client started\n\n");
         }
@@ -181,7 +178,7 @@ public class MTaxi implements Comparable<MTaxi> {
         System.out.println("\n\nCOMMAND RECEIVED:");
 
             /*
-            Disconnect mqtt client to not receive new orders
+            Disconnect mqtt client to not receive new rides
              */
         if (isMaster()) {
             try {
@@ -220,11 +217,11 @@ public class MTaxi implements Comparable<MTaxi> {
         }
 
         if (isMaster()) {
-            // this make sure to run orderqueue until it's empty
+            // this make sure to run ridequeue until it's empty
             try {
                 rideQueue.setExit(true);
                 /*
-                if orders are still in the queue, notifyAll, as
+                if rides are still in the queue, notifyAll, as
                 there might be a produce that's stuck.
                 Then wait on the queue, there will be a notify when all the
                 current deliveries are finished
@@ -243,7 +240,7 @@ public class MTaxi implements Comparable<MTaxi> {
             } catch (NullPointerException e) {
                 System.out.println("Ride queue was not initialized");
             }
-            System.out.println("\t- All orders have been assigned\n" +
+            System.out.println("\t- All rides have been assigned\n" +
                     "\t- Sending statistics to the REST API...");
             try {
                 synchronized (statisticsMonitor.statisticLock) {
@@ -264,9 +261,9 @@ public class MTaxi implements Comparable<MTaxi> {
     }
 
     /*
-    Called after a quit command, ti stops everything making sure
-    an election nor a delivery is in progress, when a drone is
-    master it also empty the order queue and send the stats to the REST API.
+    Called after a quit command, it stops everything making sure
+    an election nor a delivery is in progress, when a mtaxi is
+    master it also empty the ride queue and send the stats to the REST API.
      */
     public void stop() {
         if (!isQuitting()) {
@@ -312,27 +309,45 @@ public class MTaxi implements Comparable<MTaxi> {
                     }
                 }
             }
+            if(getBattery() == 100){
+                System.out.println("BATTERIA GIA CARICA");
+            }else {
+                int d = getDistrict();
+                int[] c = new int[]{0, 0};
 
-            setCoordinates(new int[]{0, 0});
-            try {
-                System.out.println("RECHARGING");
-                Thread.sleep(5000);
-                setBattery(100);
-                System.out.println("FINISH RECHARGING");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                if (d == 2) {
+                    c[0] = 9;
+                } else if (d == 3) {
+                    c[0] = 9;
+                    c[1] = 9;
+                } else if (d == 4) {
+                    c[0] = 0;
+                    c[1] = 9;
+                }
+
+                setCoordinates(c);
+                try {
+                    System.out.println("RECHARGING");
+                    Thread.sleep(5000);
+                    setBattery(100);
+                    System.out.println("FINISH RECHARGING");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                setIsQuitting(false);
             }
-            setIsQuitting(false);
         } else {
-            System.out.println("QUIT IS ALREADY IN PROGRESS");
+            System.out.println("RECHARGE IS ALREADY IN PROGRESS");
         }
+        quitMTaxi = new QuitMTaxi(this);
+        quitMTaxi.start();
     }
 
     /*
     Enter the ring overlay network,
     The function computes the predecessor and successor,
     to simplify implementation it's called
-    every time a drone enters the system
+    every time a mtaxi enters the system
      */
     public void enterRing() {
         ArrayList<MTaxi> list = mTaxisList.getMTaxiList();
@@ -372,7 +387,7 @@ public class MTaxi implements Comparable<MTaxi> {
 
 
     /*
-    Delivery simulation, the Drone sleeps for 5 seconds,
+    Ride simulation, the Mtaxi sleeps for 5 seconds,
     then it sends the delivery response,
      */
     public MTaxisService.RideResponse deliver(MTaxisService.RideRequest request) {
@@ -420,13 +435,16 @@ public class MTaxi implements Comparable<MTaxi> {
 
         System.out.println("\nDELIVERY COMPLETED: \n\t- New position: [" + rideEndPosition[0] + ", " + rideEndPosition[1] + "]");
         System.out.println("\t- Residual battery: " + getBattery() + "%\n");
-        setAvailable(true);
 
+        setAvailable(true);
+        if(getBattery() < 30){
+            recharge();
+        }
         return response.build();
     }
 
     /*
-    Used to sort the drone list in enter ring
+    Used to sort the mtaxi list in enter ring
      */
     @Override
     public int compareTo(MTaxi o) {
@@ -593,14 +611,15 @@ public class MTaxi implements Comparable<MTaxi> {
     }
 
     public int getDistrict() {
-        if (coordinates[0] <= 4) {
-            if (coordinates[1] <= 4) {
+        int [] c = getCoordinates();
+        if (c[0] <= 4) {
+            if (c[1] <= 4) {
                 return 1;
             } else {
                 return 4;
             }
         } else {
-            if (coordinates[1] <= 4) {
+            if (c[1] <= 4) {
                 return 2;
             } else {
                 return 3;

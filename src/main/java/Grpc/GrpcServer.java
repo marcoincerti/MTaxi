@@ -20,7 +20,6 @@ public class GrpcServer extends Thread{
                 .addService(new PingImpl(mTaxi))
                 .addService(new ElectionImpl(mTaxi))
                 .build();
-
         try {
             server.start();
             System.out.println("GRPC server started");

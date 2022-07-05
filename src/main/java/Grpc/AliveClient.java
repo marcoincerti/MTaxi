@@ -19,13 +19,13 @@ public class AliveClient extends Thread{
         this.receiverMTaxi = receiverMTaxi;
     }
     /*
-        Send a ping to the receiver drone,
-        if an error occurs the receiver drone
+        Send a ping to the receiver mtaxi,
+        if an error occurs the receiver mtaxi
         is remove from the list, also, if he was the
         master an election is started
          */
     public void start() {
-        //System.out.println("Ping service started to drone: " + receiverDrone.getId());
+        //System.out.println("Ping service started to mtaxi: " + receiverMTaxi.getId());
         final ManagedChannel channel =
                 ManagedChannelBuilder.forTarget(receiverMTaxi.getIp() + ":" + receiverMTaxi.getPort())
                         .usePlaintext().build();
@@ -37,13 +37,13 @@ public class AliveClient extends Thread{
         stub.alive(req, new StreamObserver<MTaxisService.PingResponse>() {
             @Override
             public void onNext(MTaxisService.PingResponse value) {
-                //System.out.println("Ping Response received from drone " + receiverDrone.getId());
+                //System.out.println("Ping Response received from mtaxi " + receiverMTaxi.getId());
             }
 
             @Override
             public void onError(Throwable t) {
                 channel.shutdown();
-                //System.out.println("PING ERROR: drone " + receiverDrone.getId() + " is offline");
+                //System.out.println("PING ERROR: mtaxi " + receiverMtaxi.getId() + " is offline");
                 senderMTaxi.getMTAxisList().remove(receiverMTaxi);
 
                 if (receiverMTaxi.isMaster()) {

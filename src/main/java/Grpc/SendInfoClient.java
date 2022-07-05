@@ -23,8 +23,8 @@ public class SendInfoClient extends Thread {
     }
 
     public void start(){
-        // build channel pointing receiver drone
-        //System.out.println("Creating stub " + receiverDrone.getIp() + ":" + receiverDrone.getPort());
+        // build channel pointing receiver mtaxi
+        //System.out.println("Creating stub " + receiverMTaxi.getIp() + ":" + receiverMTaxi.getPort());
         final ManagedChannel channel =
                 ManagedChannelBuilder.forTarget(receiverMTaxi.getIp() + ":" + receiverMTaxi.getPort())
                         .usePlaintext().build();

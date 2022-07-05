@@ -94,7 +94,7 @@ public class StatisticsMonitor extends Thread{
         while (true) {
             synchronized (statisticLock) {
                 try {
-                    statisticLock.wait(10000);
+                    statisticLock.wait(15000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

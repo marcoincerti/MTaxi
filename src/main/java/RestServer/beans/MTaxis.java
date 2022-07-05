@@ -36,14 +36,12 @@ public class MTaxis {
     private int[] randomCoordinates() {
         Random rd = new Random();
         int x = abs(rd.nextInt()%10);
-        int y = abs(rd.nextInt()%10);
         x = ((x  <= 4) ? 0 : 9);
-        y = ((x  <= 4) ? 0 : 9);
+        int y = ((x  <= 4) ? 0 : 9);
         return new int[]{x, y};
     }
 
     public synchronized CoordMTaxiList add(MTaxi u){
-
         for ( MTaxi d : this.getmTaxisList() ) {
             if (u.getId() == d.getId())
                 return null;
